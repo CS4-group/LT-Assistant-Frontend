@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoginPage } from '@/pages/LoginPage';
 import { InitialPage } from '@/pages/InitialPage';
 import { RatingPage } from '@/pages/RatingPage';
+import { CoursePlannerPage } from '@/pages/CoursePlannerPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -46,6 +47,20 @@ function ProtectedRatingPage() {
   return isAuthenticated ? <RatingPage /> : <Navigate to="/login" replace />;
 }
 
+function ProtectedCoursePlannerPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <CoursePlannerPage /> : <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -59,6 +74,7 @@ function App() {
               {/* Protected Routes */}
               <Route path="/" element={<ProtectedInitialPage />} />
               <Route path="/rating" element={<ProtectedRatingPage />} />
+              <Route path="/planner" element={<ProtectedCoursePlannerPage />} />
             </Routes>
             
             {/* Toast notifications */}

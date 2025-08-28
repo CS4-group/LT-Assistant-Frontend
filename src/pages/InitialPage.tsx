@@ -8,8 +8,7 @@ export function InitialPage() {
   const navigate = useNavigate();
 
   const handleCoursePlanner = () => {
-    // TODO: Navigate to course planner page
-    console.log('Navigate to Course Planner & AI');
+    navigate('/planner');
   };
 
   const handleRatingSystem = () => {
@@ -30,7 +29,7 @@ export function InitialPage() {
             {/* Course Planner & AI Button */}
             <Button
               onClick={handleCoursePlanner}
-              className="h-64 w-full flex flex-col items-center justify-center space-y-4 text-xl font-semibold bg-primary hover:bg-primary/90 transition-all duration-200 transform hover:scale-105"
+              className="h-64 w-full flex flex-col items-center justify-center space-y-4 text-xl font-semibold bg-primary text-white hover:bg-primary/90 transition-all duration-200 transform hover:scale-105"
               size="lg"
             >
               <GraduationCap className="h-16 w-16" />
@@ -40,7 +39,7 @@ export function InitialPage() {
             {/* Rating System Button */}
             <Button
               onClick={handleRatingSystem}
-              className="h-64 w-full flex flex-col items-center justify-center space-y-4 text-xl font-semibold bg-accent hover:bg-accent/90 transition-all duration-200 transform hover:scale-105"
+              className="h-64 w-full flex flex-col items-center justify-center space-y-4 text-xl font-semibold bg-white text-primary border hover:bg-primary/10 transition-all duration-200 transform hover:scale-105"
               size="lg"
             >
               <Star className="h-16 w-16" />
