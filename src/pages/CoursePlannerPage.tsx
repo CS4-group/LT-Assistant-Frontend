@@ -11,6 +11,7 @@ type YearKey = 'Freshman' | 'Sophomore' | 'Junior' | 'Senior';
 type Course = {
   id: string;
   name: string;
+  description?: string;
 };
 
 type Planner = Record<YearKey, Record<TermKey, Course[]>>;
@@ -47,6 +48,15 @@ function titleCase(text: string): string {
     .split(/\s+/)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
+}
+
+function hashColorFromName(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+  }
+  const hue = (hash % 360 + 360) % 360;
+  return `hsl(${hue}, 70%, 45%)`;
 }
 
 const YEAR_SYNONYMS: Record<string, YearKey> = {
@@ -166,13 +176,13 @@ function parseCommand(inputRaw: string): ParsedCommand {
 }
 
 function findNextOpenSlot(planner: Planner): { year: YearKey; term: TermKey } | null {
-  // Choose the bucket with the fewest courses overall to distribute evenly
+  // Find least-filled term with capacity under 8
   let best: { year: YearKey; term: TermKey } | null = null;
   let minCount = Number.POSITIVE_INFINITY;
   for (const year of YEAR_ORDER) {
     for (const term of TERM_ORDER) {
       const count = planner[year][term].length;
-      if (count < minCount) {
+      if (count < 8 && count < minCount) {
         minCount = count;
         best = { year, term };
       }
@@ -202,8 +212,9 @@ function placeCourse(planner: Planner, courseName: string, target?: ParsedTarget
   }
 
   if (!year || !term) return { planner, placed: null };
+  if (clone[year][term].length >= 8) return { planner, placed: null };
 
-  clone[year][term].push({ id, name: titleCase(courseName) });
+  clone[year][term].push({ id, name: titleCase(courseName), description: `${titleCase(courseName)} — overview of topics, projects, and key outcomes.` });
   return { planner: clone, placed: { year, term } };
 }
 
@@ -366,15 +377,15 @@ export function CoursePlannerPage() {
                 <span className="text-sm font-normal text-gray-500">{totalCourses} course{totalCourses === 1 ? '' : 's'}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="h-[78vh] flex flex-col">
-              {/* Overview grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1">
+            <CardContent className="h-[82vh] flex flex-col">
+              {/* Overview grid - stretch tiles to fill white space */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto pr-1 auto-rows-[minmax(260px,1fr)]">
                 {YEAR_ORDER.map((year) => {
                   const totalYear = planner[year].Fall.length + planner[year].Spring.length;
                   return (
                     <div
                       key={year}
-                      className="text-left rounded-xl border ring-1 ring-primary/10 bg-white/75 backdrop-blur-md shadow-sm animate-fade-in-up hover:shadow-md transition-all"
+                      className="text-left rounded-xl border ring-1 ring-primary/10 bg-white/75 backdrop-blur-md shadow-sm animate-fade-in-up hover:shadow-md transition-all flex flex-col"
                     >
                       <button
                         onClick={() => { setSelectedYear(year); setIsDetailOpen(true); setOverlayPhase('enter'); setTimeout(() => setOverlayPhase('idle'), 170); }}
@@ -386,33 +397,39 @@ export function CoursePlannerPage() {
                           {totalYear} courses
                         </div>
                       </button>
-                      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
                         {TERM_ORDER.map((term) => (
                           <div
                             key={term}
-                            className="rounded-lg border p-3 bg-gradient-to-br from-gray-50 to-white"
+                            className="rounded-lg border p-3 bg-gradient-to-br from-gray-50 to-white flex flex-col"
                             onDragOver={(e) => { e.preventDefault(); }}
                             onDrop={(e) => {
                               e.preventDefault();
                               if (!dragInfo) return;
                               const { courseName, fromYear, fromTerm } = dragInfo;
-                              setPlanner((p) => moveCourse(p, courseName, { year, term }, { year: fromYear, term: fromTerm }).planner);
+                              setPlanner((p) => {
+                                if (p[year][term].length >= 8) return p;
+                                return moveCourse(p, courseName, { year, term }, { year: fromYear, term: fromTerm }).planner;
+                              });
                               setDragInfo(null);
                             }}
                           >
                             <div className="mb-2 flex items-center justify-between">
                               <div className="text-sm font-medium text-gray-700">{term}</div>
-                              <div className="text-[10px] text-gray-400">{planner[year][term].length}</div>
+                              <div className="text-[10px] text-gray-400">{planner[year][term].length}/8</div>
                             </div>
-                            <div className="min-h-[90px] space-y-2">
+                            <div className="min-h-[90px] space-y-2 flex-1">
                               {planner[year][term].map((course) => (
                                 <div
                                   key={course.id}
-                                  className="group flex items-center justify-between gap-2 rounded-md bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-all animate-pop"
+                                  className="group flex items-center justify-between gap-2 rounded-md bg-white/95 px-3 py-2 text-sm shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-all animate-pop backdrop-blur-sm"
                                   draggable
                                   onDragStart={() => setDragInfo({ courseName: course.name, fromYear: year, fromTerm: term })}
                                 >
-                                  <span className="font-medium text-gray-800">{course.name}</span>
+                                  <span className="flex items-center gap-2 font-medium text-gray-800">
+                                    <span className="h-5 w-5 rounded-md" style={{ backgroundColor: hashColorFromName(course.name) }} />
+                                    {course.name}
+                                  </span>
                                   <button
                                     title="Remove"
                                     onClick={() => setPlanner((p) => removeCourse(p, course.name).planner)}
@@ -451,7 +468,7 @@ export function CoursePlannerPage() {
                     <div className="text-sm text-gray-500">{planner[selectedYear].Fall.length + planner[selectedYear].Spring.length} courses</div>
                   </div>
                   <h2 className="text-xl font-semibold mb-3">{selectedYear} Year</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[52vh] overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[58vh] overflow-y-auto pr-1">
                     {TERM_ORDER.map((term) => (
                       <div
                         key={term}
