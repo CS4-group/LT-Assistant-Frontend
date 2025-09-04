@@ -1,2 +1,2 @@
 # LT Assistant Frontend
-Assistant Website
+Assistant Website's Frontend
