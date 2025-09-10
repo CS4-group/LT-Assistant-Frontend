@@ -147,9 +147,16 @@ export function RatingPage() {
         <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
           {selectedItemId ? (
             <div className="space-y-4">
-              <h2 className="text-2xl font-bold mb-4">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold mb-2"> Description
+                </h2>
+                <p className="text-gray-600 text-lg mb-4">
+                  {activeData.find(item => item.id === selectedItemId)?.description}
+                </p>
+              </div>
+              <h3 className="text-xl font-semibold mb-4">
                 Reviews for {activeData.find(item => item.id === selectedItemId)?.title}
-              </h2>
+              </h3>
               {displayedReviews.length > 0 ? (
                 displayedReviews.map(review => <ReviewCard key={review.id} review={review} />)
               ) : (
