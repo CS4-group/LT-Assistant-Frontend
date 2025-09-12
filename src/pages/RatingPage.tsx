@@ -2,11 +2,14 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { courses, clubs, teachers, reviews as mockReviews } from '@/lib/mockData';
+import { reviews as mockReviews } from '@/lib/mockData';
 import { SidebarList } from '@/components/SidebarList';
 import { ReviewCard } from '@/components/ReviewCard';
 import { AddReviewPanel } from '@/components/AddReviewPanel';
 import { SearchBar } from '@/components/SearchBar';
+import { api, Course, Club, Teacher } from '@/api';
+
+type Item = Course | Club | Teacher;
 
 export function RatingPage() {
   const [activeTab, setActiveTab] = useState('courses');
@@ -14,12 +17,41 @@ export function RatingPage() {
   const [isReviewPanelOpen, setReviewPanelOpen] = useState(false);
   const [reviews, setReviews] = useState(mockReviews);
   const [searchQuery, setSearchQuery] = useState('');
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
     setSearchQuery('');
   };
+
+  // Load data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [coursesData, clubsData, teachersData] = await Promise.all([
+          api.fetchCourses(),
+          api.fetchClubs(),
+          api.fetchTeachers()
+        ]);
+        setCourses(coursesData);
+        setClubs(clubsData);
+        setTeachers(teachersData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const tabs = [
     { 
@@ -43,17 +75,21 @@ export function RatingPage() {
   ];
 
   const activeData = useMemo(() => {
+    let data: Item[] = [];
     switch (activeTab) {
       case 'courses':
-        return courses;
+        data = courses;
+        break;
       case 'clubs':
-        return clubs;
+        data = clubs;
+        break;
       case 'teachers':
-        return teachers;
-      default:
-        return [];
+        data = teachers;
+        break;
     }
-  }, [activeTab]);
+    // Map _id to id for compatibility with existing components
+    return data.map(item => ({ ...item, id: item._id }));
+  }, [activeTab, courses, clubs, teachers]);
 
   const filteredData = useMemo(() => {
     if (!searchQuery) return activeData;
@@ -145,7 +181,15 @@ export function RatingPage() {
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
-          {selectedItemId ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-gray-500">Loading...</p>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-red-500">Error: {error}</p>
+            </div>
+          ) : selectedItemId ? (
             <div className="space-y-4">
               <div className="mb-6">
                 <h2 className="text-2xl font-bold mb-2"> Description
