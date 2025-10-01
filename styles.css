@@ -1,4 +1,3 @@
-/* CSS Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -12,10 +11,9 @@ body {
     background-color: #f9fafb;
 }
 
-/* CSS Variables for consistent theming */
 :root {
-    --primary-color: #3b82f6;
-    --primary-hover: #2563eb;
+    --primary-color: #c42525;
+    --primary-hover: #ff000096;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -30,12 +28,11 @@ body {
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --border-radius: 0.5rem;
+    --border-radius: 0.67rem;
     --border-radius-lg: 0.75rem;
     --transition: all 0.2s ease-in-out;
 }
 
-/* Utility Classes */
 .hidden {
     display: none !important;
 }
@@ -46,7 +43,6 @@ body {
     overflow: hidden;
 }
 
-/* Button Styles */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -92,7 +88,6 @@ body {
     width: 100%;
 }
 
-/* Form Styles */
 .form {
     display: flex;
     flex-direction: column;
@@ -126,7 +121,6 @@ body {
     box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
 }
 
-/* Card Styles */
 .card {
     background-color: var(--white);
     border-radius: var(--border-radius-lg);
@@ -155,7 +149,6 @@ body {
     padding: 1.5rem;
 }
 
-/* Login Page Styles */
 .login-page {
     background-color: var(--gray-50);
     display: flex;
@@ -194,7 +187,6 @@ body {
     color: var(--gray-600);
 }
 
-/* Home Page Styles */
 .home-page {
     display: flex;
     flex-direction: column;
@@ -333,7 +325,6 @@ body {
     justify-content: center;
 }
 
-/* Loading Styles */
 .loading-page {
     display: flex;
     align-items: center;
@@ -355,7 +346,6 @@ body {
     }
 }
 
-/* Animation classes */
 .fade-in {
     animation: fadeIn 0.3s ease-in-out;
 }
@@ -371,7 +361,6 @@ body {
     }
 }
 
-/* Rating Page Styles */
 .rating-page {
     display: flex;
     flex-direction: column;
@@ -538,7 +527,6 @@ body {
     z-index: 100;
 }
 
-/* Course Planner Styles */
 .planner-page {
     background-color: var(--gray-50);
     padding: 1rem;
