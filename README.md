@@ -1,2 +1,4 @@
 # LT Assistant Frontend
-Assistant Website's Frontend
+
+Mrs. Preesha packed up this project
+
