@@ -1,15 +1,245 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preload" href="/lt-logo.svg" as="image" />
-    <link rel="preload" href="/title-bg.svg" as="image" />
-    <title>LT Assistant Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LT Assistant</title>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="app">
+        <!-- Content will be dynamically loaded here -->
+    </div>
+
+    <!-- Login Page Template -->
+    <template id="login-template">
+        <div class="page-container login-page">
+            <div class="login-wrapper">
+                <div class="login-header">
+                    <h1 class="app-title">LT Assistant</h1>
+                    <p class="subtitle">Sign in to your account</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Login</h2>
+                        <p class="card-description">Enter your credentials to access your dashboard</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="login-form" class="form">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span class="btn-text">Sign in</span>
+                                <span class="btn-loading hidden">Signing in...</span>
+                            </button>
+                        </form>
+                        <div class="demo-notice">
+                            <strong>Demo Mode:</strong> Enter any email and password to login!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Initial/Home Page Template -->
+    <template id="home-template">
+        <div class="page-container home-page">
+            <div class="home-bg">
+                <img src="title-bg.jpg" alt="" class="bg-image">
+                <div class="bg-overlay"></div>
+            </div>
+            
+            <div class="home-header">
+                <img src="sift.png" alt="LT" class="logo">
+                <h1 class="app-title-large">LT Assistant</h1>
+                <p class="tagline">Plan your path and rate experiences</p>
+            </div>
+
+            <div class="home-content">
+                <div class="feature-grid">
+                    <button class="feature-card planner-card" onclick="navigateTo('/planner')">
+                        <div class="feature-icon">🎓</div>
+                        <span class="feature-title">Course Planner & AI</span>
+                    </button>
+                    <button class="feature-card rating-card" onclick="navigateTo('/rating')">
+                        <div class="feature-icon">⭐</div>
+                        <span class="feature-title">Rating System</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="home-footer">
+                <button class="btn btn-outline logout-btn" onclick="logout()">
+                    <span>🚪 Logout</span>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Rating Page Template -->
+    <template id="rating-template">
+        <div class="page-container rating-page">
+            <div class="planner-header">
+                <div class="header-left">
+                    <div>
+                        <h1>Rating System</h1>
+                        <p>Rate and review courses, clubs, and teachers</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-outline" onclick="navigateTo('/')">Back</button>
+                    <button class="btn btn-outline" id="header-add-review-btn" disabled>Add Review</button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-container">
+                <button class="tab-button active" data-tab="courses">Courses</button>
+                <button class="tab-button" data-tab="clubs">Clubs</button>
+                <button class="tab-button" data-tab="teachers">Teachers</button>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="search-input" class="form-input" placeholder="Search for a course...">
+            </div>
+
+            <div class="rating-content">
+                <div class="sidebar">
+                    <h2 id="sidebar-title">Courses List</h2>
+                    <div id="items-list" class="items-list">
+                        <!-- Items will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="main-content">
+                    <div id="item-details" class="item-details">
+                        <p>Select an item from the list to see reviews.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </template>
+
+    <!-- Course Planner Page Template -->
+    <template id="planner-template">
+        <div class="page-container planner-page">
+            <div class="planner-header">
+                <div class="header-left">
+                    <div>
+                        <h1>Course Planner</h1>
+                        <p>Plan your 4-year high school journey</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn btn-outline" onclick="navigateTo('/')">Back</button>
+                    <button class="btn btn-outline" onclick="clearPlanner()">Reset Plan</button>
+                </div>
+            </div>
+
+            <div class="planner-content">
+                <!-- Course Planning Grid -->
+                <div class="planner-grid">
+                    <div class="year-section" data-year="Freshman">
+                        <h3 class="year-title">Freshman Year</h3>
+                        <div class="terms-container">
+                            <div class="term-section" data-term="Fall">
+                                <h4>Fall</h4>
+                                <div class="course-slot" data-year="Freshman" data-term="Fall">
+                                    <!-- Courses will be added here -->
+                                </div>
+                            </div>
+                            <div class="term-section" data-term="Spring">
+                                <h4>Spring</h4>
+                                <div class="course-slot" data-year="Freshman" data-term="Spring">
+                                    <!-- Courses will be added here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="year-section" data-year="Sophomore">
+                        <h3 class="year-title">Sophomore Year</h3>
+                        <div class="terms-container">
+                            <div class="term-section" data-term="Fall">
+                                <h4>Fall</h4>
+                                <div class="course-slot" data-year="Sophomore" data-term="Fall"></div>
+                            </div>
+                            <div class="term-section" data-term="Spring">
+                                <h4>Spring</h4>
+                                <div class="course-slot" data-year="Sophomore" data-term="Spring"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="year-section" data-year="Junior">
+                        <h3 class="year-title">Junior Year</h3>
+                        <div class="terms-container">
+                            <div class="term-section" data-term="Fall">
+                                <h4>Fall</h4>
+                                <div class="course-slot" data-year="Junior" data-term="Fall"></div>
+                            </div>
+                            <div class="term-section" data-term="Spring">
+                                <h4>Spring</h4>
+                                <div class="course-slot" data-year="Junior" data-term="Spring"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="year-section" data-year="Senior">
+                        <h3 class="year-title">Senior Year</h3>
+                        <div class="terms-container">
+                            <div class="term-section" data-term="Fall">
+                                <h4>Fall</h4>
+                                <div class="course-slot" data-year="Senior" data-term="Fall"></div>
+                            </div>
+                            <div class="term-section" data-term="Spring">
+                                <h4>Spring</h4>
+                                <div class="course-slot" data-year="Senior" data-term="Spring"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simple Add Course Form -->
+                <div class="add-course-section">
+                    <h3>Add Course</h3>
+                    <form id="add-course-form" class="add-course-form">
+                        <input type="text" id="course-name" class="form-input" placeholder="Enter course name" required>
+                        <select id="course-year" class="form-input" required>
+                            <option value="">Select Year</option>
+                            <option value="Freshman">Freshman</option>
+                            <option value="Sophomore">Sophomore</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Senior">Senior</option>
+                        </select>
+                        <select id="course-term" class="form-input" required>
+                            <option value="">Select Term</option>
+                            <option value="Fall">Fall</option>
+                            <option value="Spring">Spring</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Add Course</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Loading Template -->
+    <template id="loading-template">
+        <div class="page-container loading-page">
+            <div class="loading-spinner"></div>
+        </div>
+    </template>
+
+    <script src="main.js"></script>
   </body>
 </html>
