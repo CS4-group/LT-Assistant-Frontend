@@ -346,6 +346,13 @@ body {
     }
 }
 
+.loading-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--gray-500);
+    font-style: italic;
+}
+
 .fade-in {
     animation: fadeIn 0.3s ease-in-out;
 }

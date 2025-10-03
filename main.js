@@ -3,6 +3,9 @@ class App {
     constructor() {
         this.currentPage = '';
         this.isAuthenticated = false;
+        this.apiBaseUrl = 'http://localhost:3000'; // Configure your API base URL here
+        this.courseNames = []; // Cache for course names
+        this.courseDetails = {}; // Cache for individual course details
         this.init();
     }
 
@@ -18,6 +21,56 @@ class App {
         
         // Set up form handlers
         this.setupEventListeners();
+    }
+
+    // API Helper Functions
+    async fetchCourseNames() {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/courses/names`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                this.courseNames = result.data;
+                return result.data;
+            } else {
+                throw new Error(result.message || 'Failed to fetch course names');
+            }
+        } catch (error) {
+            console.error('Error fetching course names:', error);
+            this.showToast('Failed to load courses. Please try again.', 'error');
+            return [];
+        }
+    }
+
+    async fetchCourseDetails(courseId) {
+        // Check cache first
+        if (this.courseDetails[courseId]) {
+            return this.courseDetails[courseId];
+        }
+
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/courses/${courseId}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Course not found');
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                // Cache the result
+                this.courseDetails[courseId] = result.data;
+                return result.data;
+            } else {
+                throw new Error(result.message || 'Failed to fetch course details');
+            }
+        } catch (error) {
+            console.error('Error fetching course details:', error);
+            this.showToast(`Failed to load course details: ${error.message}`, 'error');
+            return null;
+        }
     }
 
     handleRouting() {
@@ -146,6 +199,18 @@ class App {
         });
 
         // Load initial data
+        this.loadInitialData();
+    }
+
+    async loadInitialData() {
+        // Show loading state
+        const itemsList = document.getElementById('items-list');
+        itemsList.innerHTML = '<div class="loading-state">Loading courses...</div>';
+        
+        if (this.currentTab === 'courses') {
+            await this.fetchCourseNames();
+        }
+        
         this.updateItemsList();
     }
 
@@ -172,8 +237,9 @@ class App {
         });
     }
 
-    switchTab(tabName) {
+    async switchTab(tabName) {
         this.currentTab = tabName;
+        this.selectedItemId = null;
         
         // Update tab buttons
         document.querySelectorAll('.tab-button').forEach(btn => {
@@ -188,44 +254,82 @@ class App {
         // Update sidebar title
         document.getElementById('sidebar-title').textContent = `${tabName.charAt(0).toUpperCase() + tabName.slice(1)} List`;
 
-        this.updateItemsList();
+        // Clear main content
+        document.getElementById('item-details').innerHTML = '<p>Select an item from the list to see reviews.</p>';
+        
+        // Disable add review button until item is selected
+        document.getElementById('header-add-review-btn').disabled = true;
+
+        // Load data for the selected tab
+        if (tabName === 'courses') {
+            await this.loadInitialData();
+        } else {
+            this.updateItemsList();
+        }
     }
 
     updateItemsList() {
         const itemsList = document.getElementById('items-list');
-        const data = window.mockData[this.currentTab] || [];
+        let data = [];
+        
+        // Use API data for courses, mock data for others
+        if (this.currentTab === 'courses') {
+            data = this.courseNames;
+        } else {
+            data = window.mockData[this.currentTab] || [];
+        }
         
         const filteredData = data.filter(item => 
             !this.searchQuery || item.title.toLowerCase().includes(this.searchQuery)
         );
 
+        // Handle empty data
+        if (filteredData.length === 0) {
+            itemsList.innerHTML = this.currentTab === 'courses' && this.courseNames.length === 0
+                ? '<div class="loading-state">No courses available</div>'
+                : '<div class="loading-state">No items found</div>';
+            this.selectedItemId = null;
+            this.updateItemDetails();
+            return;
+        }
+
+        // Use appropriate ID field based on data source
+        const getItemId = (item) => this.currentTab === 'courses' ? item.id : item._id;
+        const getItemDescription = (item) => this.currentTab === 'courses' ? 'Click to view details' : item.description;
+
         itemsList.innerHTML = filteredData.map(item => `
-            <div class="item-card ${this.selectedItemId === item._id ? 'selected' : ''}" 
-                 onclick="window.app.selectItem('${item._id}')">
+            <div class="item-card ${this.selectedItemId === getItemId(item) ? 'selected' : ''}" 
+                 onclick="window.app.selectItem('${getItemId(item)}')">
                 <div class="item-title">${item.title}</div>
-                <div class="item-description">${item.description}</div>
+                <div class="item-description">${getItemDescription(item)}</div>
             </div>
         `).join('');
 
         // Auto-select first item if none selected
         if (!this.selectedItemId && filteredData.length > 0) {
-            this.selectItem(filteredData[0]._id);
+            this.selectItem(getItemId(filteredData[0]));
         } else if (filteredData.length === 0) {
             this.selectedItemId = null;
             this.updateItemDetails();
         }
     }
 
-    selectItem(itemId) {
+    async selectItem(itemId) {
         this.selectedItemId = itemId;
         this.updateItemsList(); // Refresh to show selection
-        this.updateItemDetails();
+        
+        // Show loading state for course details
+        if (this.currentTab === 'courses') {
+            document.getElementById('item-details').innerHTML = '<div class="loading-state">Loading course details...</div>';
+        }
+        
+        await this.updateItemDetails();
         
         // Enable add review button
         document.getElementById('header-add-review-btn').disabled = false;
     }
 
-    updateItemDetails() {
+    async updateItemDetails() {
         const itemDetails = document.getElementById('item-details');
         
         if (!this.selectedItemId) {
@@ -233,18 +337,32 @@ class App {
             return;
         }
 
-        const data = window.mockData[this.currentTab] || [];
-        const item = data.find(i => i._id === this.selectedItemId);
+        let item = null;
         
-        if (!item) {
-            itemDetails.innerHTML = '<p>Item not found.</p>';
-            return;
+        // Handle courses vs other items differently
+        if (this.currentTab === 'courses') {
+            // Fetch full course details from API
+            item = await this.fetchCourseDetails(this.selectedItemId);
+            if (!item) {
+                itemDetails.innerHTML = '<p>Failed to load course details.</p>';
+                return;
+            }
+        } else {
+            // Use mock data for other tabs
+            const data = window.mockData[this.currentTab] || [];
+            item = data.find(i => i._id === this.selectedItemId);
+            if (!item) {
+                itemDetails.innerHTML = '<p>Item not found.</p>';
+                return;
+            }
         }
 
+        // Get reviews (still from mock data for now - this could be extended later)
         const reviews = window.mockData.reviews.filter(r => r.itemId === this.selectedItemId);
         
         itemDetails.innerHTML = `
-            <h2>Description</h2>
+            <h2>${item.title}</h2>
+            <h3>Description</h3>
             <p>${item.description}</p>
             <div class="reviews-section">
                 <h3>Reviews for ${item.title}</h3>
@@ -264,9 +382,20 @@ class App {
         `;
     }
 
-    openAddReviewModal() {
-        const data = window.mockData[this.currentTab] || [];
-        const item = data.find(i => i._id === this.selectedItemId);
+    async openAddReviewModal() {
+        let item = null;
+        
+        // Get item details based on current tab
+        if (this.currentTab === 'courses') {
+            item = this.courseDetails[this.selectedItemId];
+            if (!item) {
+                // If not cached, fetch it
+                item = await this.fetchCourseDetails(this.selectedItemId);
+            }
+        } else {
+            const data = window.mockData[this.currentTab] || [];
+            item = data.find(i => i._id === this.selectedItemId);
+        }
         
         if (!item) return;
 
@@ -283,7 +412,7 @@ class App {
             };
             
             window.mockData.reviews.push(newReview);
-            this.updateItemDetails();
+            await this.updateItemDetails();
             this.showToast('Review added successfully!', 'success');
         }
     }
@@ -476,15 +605,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
 
-// Add some mock data that was previously from API
+// Mock data for features not yet integrated with backend
 window.mockData = {
-    courses: [
-        {
-            _id: 'course-1',
-            title: 'Tuffematics',
-            description: 'How to be tuff'
-        }
-    ],
     clubs: [
         {
             _id: 'club-1',
@@ -500,12 +622,7 @@ window.mockData = {
         }
     ],
     reviews: [
-        {
-            id: 'review-course-1-1',
-            itemId: 'course-1',
-            user: { name: 'Tuff Smith', avatarUrl: 'https://i.pravatar.cc/150?u=alex' },
-            rating: 5,
-            comment: 'I am very tuff now'
-        }
+        // Reviews can be associated with any item by itemId
+        // For courses, use the course ID from the API
     ]
 };
