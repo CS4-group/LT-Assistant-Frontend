@@ -297,13 +297,17 @@ class App {
         const getItemId = (item) => this.currentTab === 'courses' ? item.id : item._id;
         const getItemDescription = (item) => this.currentTab === 'courses' ? 'Click to view details' : item.description;
 
-        itemsList.innerHTML = filteredData.map(item => `
-            <div class="item-card ${this.selectedItemId === getItemId(item) ? 'selected' : ''}" 
-                 onclick="window.app.selectItem('${getItemId(item)}')">
-                <div class="item-title">${item.title}</div>
-                <div class="item-description">${getItemDescription(item)}</div>
-            </div>
-        `).join('');
+        itemsList.innerHTML = filteredData.map(item => {
+            const itemId = getItemId(item);
+            const isSelected = String(this.selectedItemId) === String(itemId);
+            return `
+                <div class="item-card ${isSelected ? 'selected' : ''}" 
+                     onclick="window.app.selectItem('${itemId}')">
+                    <div class="item-title">${item.title}</div>
+                    <div class="item-description">${getItemDescription(item)}</div>
+                </div>
+            `;
+        }).join('');
 
         // Auto-select first item if none selected
         if (!this.selectedItemId && filteredData.length > 0) {
@@ -315,7 +319,7 @@ class App {
     }
 
     async selectItem(itemId) {
-        this.selectedItemId = itemId;
+        this.selectedItemId = String(itemId); // Ensure consistent string storage
         this.updateItemsList(); // Refresh to show selection
         
         // Show loading state for course details
