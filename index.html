@@ -8,10 +8,9 @@
   </head>
   <body>
     <div id="app">
-        <!-- Content will be dynamically loaded here -->
     </div>
 
-    <!-- Login Page Template -->
+    <!-- Login page -->
     <template id="login-template">
         <div class="page-container login-page">
             <div class="login-wrapper">
@@ -49,7 +48,7 @@
         </div>
     </template>
 
-    <!-- Initial/Home Page Template -->
+    <!-- Home page-->
     <template id="home-template">
         <div class="page-container home-page">
             <div class="home-bg">
@@ -82,7 +81,7 @@
         </div>
     </template>
 
-    <!-- Rating Page Template -->
+    <!-- Rating page-->
     <template id="rating-template">
         <div class="page-container rating-page">
             <div class="planner-header">
@@ -98,7 +97,6 @@
                 </div>
             </div>
 
-            <!-- Tab Navigation -->
             <div class="tab-container">
                 <button class="tab-button active" data-tab="courses">Courses</button>
                 <button class="tab-button" data-tab="clubs">Clubs</button>
@@ -113,7 +111,6 @@
                 <div class="sidebar">
                     <h2 id="sidebar-title">Courses List</h2>
                     <div id="items-list" class="items-list">
-                        <!-- Items will be populated by JavaScript -->
                     </div>
                 </div>
 
@@ -127,7 +124,7 @@
         </div>
     </template>
 
-    <!-- Course Planner Page Template -->
+    <!-- Course page-->
     <template id="planner-template">
         <div class="page-container planner-page">
             <div class="planner-header">
@@ -144,7 +141,6 @@
             </div>
 
             <div class="planner-content">
-                <!-- Course Planning Grid -->
                 <div class="planner-grid">
                     <div class="year-section" data-year="Freshman">
                         <h3 class="year-title">Freshman Year</h3>
@@ -152,13 +148,11 @@
                             <div class="term-section" data-term="Fall">
                                 <h4>Fall</h4>
                                 <div class="course-slot" data-year="Freshman" data-term="Fall">
-                                    <!-- Courses will be added here -->
                                 </div>
                             </div>
                             <div class="term-section" data-term="Spring">
                                 <h4>Spring</h4>
                                 <div class="course-slot" data-year="Freshman" data-term="Spring">
-                                    <!-- Courses will be added here -->
                                 </div>
                             </div>
                         </div>
@@ -207,7 +201,6 @@
                     </div>
                 </div>
 
-                <!-- Simple Add Course Form -->
                 <div class="add-course-section">
                     <h3>Add Course</h3>
                     <form id="add-course-form" class="add-course-form">
@@ -231,7 +224,6 @@
         </div>
     </template>
 
-    <!-- Loading Template -->
     <template id="loading-template">
         <div class="page-container loading-page">
             <div class="loading-spinner"></div>

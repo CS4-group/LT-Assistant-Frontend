@@ -13,7 +13,7 @@ body {
 
 :root {
     --primary-color: #c42525;
-    --primary-hover: #ff000096;
+    --primary-hover: #ffffff96;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
     --gray-200: #e5e7eb;
@@ -283,33 +283,38 @@ body {
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--gray-200);
     cursor: pointer;
-    /* transition: all 0.2s ease-in-out, transform 0.2s ease-in-out; */
+    transition: all 0.2s ease-in-out, transform 0.2s ease-in-out; */
     background-color: var(--white);
 }
 
-/* .feature-card:hover {
+ .feature-card:hover {
     transform: scale(1.05);
     box-shadow: var(--shadow-lg);
-} */
+} 
 
 .planner-card {
     background-color: var(--primary-color);
     color: var(--white);
 }
 
-/* .planner-card:hover {
+ .planner-card:hover {
     background-color: var(--primary-hover);
-} */
+    .feature-title {
+        color: var(--primary-color);
+    }
+} 
 
 .rating-card {
-    background-color: var(--white);
-    color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: var(--white);
 }
 
-/* .rating-card:hover {
-    background-color: rgb(59 130 246 / 0.1);
-} */
+ .rating-card:hover {
+    background-color: var(--primary-hover);
+    .feature-title {
+        color: var(--primary-color);
+    }
+} 
 
 .feature-icon {
     font-size: 4rem;
@@ -317,6 +322,8 @@ body {
 
 .feature-title {
     text-align: center;
+    font-family: Trebuchet MS, sans-serif;
+    font-size: 2rem;
 }
 
 .home-footer {
@@ -465,9 +472,9 @@ body {
 }
 
 .item-card.selected {
-    background-color: var(--primary-color);
-    color: var(--white);
-    border-color: var(--primary-color);
+    background-color: rgb(218, 33, 46); /* Highlight the selected card with a red background */
+    color: white; /* Optional: Adjust text color for better contrast */
+    border: 2px solid darkred; /* Optional: Add a border for emphasis */
 }
 
 .item-title {
