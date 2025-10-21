@@ -229,12 +229,8 @@ class App {
             this.renderPlannerGrid();
         }
 
-        // Setup add course form
-        const form = document.getElementById('add-course-form');
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addCourse(e);
-        });
+        // Setup chatbot functionality
+        this.setupChatbot();
     }
 
     async switchTab(tabName) {
@@ -421,15 +417,149 @@ class App {
         }
     }
 
-    addCourse(e) {
-        const formData = new FormData(e.target);
-        const courseName = formData.get('course-name').trim();
-        const year = formData.get('course-year');
-        const term = formData.get('course-term');
+    setupChatbot() {
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSend = document.getElementById('chatbot-send');
 
-        if (!courseName || !year || !term) {
-            this.showToast('Please fill in all fields', 'error');
-            return;
+        const sendMessage = () => {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            this.addChatMessage(message, 'user');
+            
+            // Clear input
+            chatbotInput.value = '';
+
+            // Process the message
+            this.processChatbotMessage(message);
+        };
+
+        chatbotSend.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+
+    addChatMessage(message, sender) {
+        const messagesContainer = document.getElementById('chatbot-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = `<p>${message}</p>`;
+        
+        messageDiv.appendChild(contentDiv);
+        messagesContainer.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    processChatbotMessage(message) {
+        // Parse the message to extract course information
+        const courseInfo = this.parseCourseinfoFromMessage(message);
+        
+        if (courseInfo) {
+            const { courseName, year, term } = courseInfo;
+            
+            // Check if we have all required information
+            if (!courseName) {
+                this.addChatMessage("I couldn't identify a course name in your message. Could you please specify which course you'd like to add?", 'bot');
+                return;
+            }
+
+            if (!year || !term) {
+                this.addChatMessage(`I understand you want to add "${courseName}", but I need to know which year and term. Please specify something like "Freshman Fall" or "Senior Spring".`, 'bot');
+                return;
+            }
+
+            // Try to add the course
+            const result = this.addCourseFromChatbot(courseName, year, term);
+            
+            if (result.success) {
+                this.addChatMessage(`Great! I've added "${courseName}" to your ${year} ${term} schedule. 📚`, 'bot');
+            } else {
+                this.addChatMessage(result.message, 'bot');
+            }
+        } else {
+            // Provide helpful suggestions
+            this.addChatMessage(`I'd be happy to help you add courses! Try saying something like:
+            <br><br>• "Add AP Biology to Junior Fall"
+            <br>• "I want to take Spanish 2 in Sophomore Spring"  
+            <br>• "Put Calculus in Senior Fall"
+            <br><br>What course would you like to add to your schedule?`, 'bot');
+        }
+    }
+
+    parseCourseinfoFromMessage(message) {
+        const lowerMessage = message.toLowerCase();
+        
+        // Extract course name patterns
+        let courseName = null;
+        
+        // Pattern: "add [course] to [year] [term]"
+        let match = lowerMessage.match(/(?:add|put)\s+([^to]+?)\s+to\s+(\w+)\s+(\w+)/i);
+        if (match) {
+            courseName = match[1].trim();
+            const year = this.capitalizeFirst(match[2]);
+            const term = this.capitalizeFirst(match[3]);
+            return { courseName, year, term };
+        }
+
+        // Pattern: "I want to take [course] in [year] [term]"
+        match = lowerMessage.match(/(?:i want to take|take)\s+([^in]+?)\s+in\s+(\w+)\s+(\w+)/i);
+        if (match) {
+            courseName = match[1].trim();
+            const year = this.capitalizeFirst(match[2]);
+            const term = this.capitalizeFirst(match[3]);
+            return { courseName, year, term };
+        }
+
+        // Pattern: "[course] [year] [term]" (simple format)
+        match = lowerMessage.match(/^([^]+?)\s+(freshman|sophomore|junior|senior)\s+(fall|spring)$/i);
+        if (match) {
+            courseName = match[1].trim();
+            const year = this.capitalizeFirst(match[2]);
+            const term = this.capitalizeFirst(match[3]);
+            return { courseName, year, term };
+        }
+
+        // Extract just course name if mentioned but no year/term
+        const addPatterns = [
+            /(?:add|put|take)\s+([^]+?)(?:\s+(?:to|in)\s+|$)/i,
+            /^([^]+?)(?:\s+(?:course|class))?$/i
+        ];
+
+        for (const pattern of addPatterns) {
+            match = lowerMessage.match(pattern);
+            if (match) {
+                courseName = match[1].trim();
+                break;
+            }
+        }
+
+        return { courseName, year: null, term: null };
+    }
+
+    capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    addCourseFromChatbot(courseName, year, term) {
+        // Validate year and term
+        const validYears = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+        const validTerms = ['Fall', 'Spring'];
+
+        if (!validYears.includes(year)) {
+            return { success: false, message: `"${year}" is not a valid year. Please use Freshman, Sophomore, Junior, or Senior.` };
+        }
+
+        if (!validTerms.includes(term)) {
+            return { success: false, message: `"${term}" is not a valid term. Please use Fall or Spring.` };
         }
 
         // Check if course already exists
@@ -440,17 +570,15 @@ class App {
         );
 
         if (exists) {
-            this.showToast('Course already exists in your plan', 'error');
-            return;
+            return { success: false, message: `"${courseName}" already exists in your course plan.` };
         }
 
         // Check if term is full (max 8 courses)
         if (this.coursePlanner[year][term].length >= 8) {
-            this.showToast('This term is full (8 courses max)', 'error');
-            return;
+            return { success: false, message: `Your ${year} ${term} term is already full (8 courses maximum).` };
         }
 
-        // Add course
+        // Add the course
         const newCourse = {
             id: `course-${Date.now()}`,
             name: courseName,
@@ -461,9 +589,8 @@ class App {
         this.savePlannerData();
         this.renderPlannerGrid();
         
-        // Clear form
-        e.target.reset();
         this.showToast(`Added ${courseName} to ${year} ${term}`, 'success');
+        return { success: true };
     }
 
     renderPlannerGrid() {
