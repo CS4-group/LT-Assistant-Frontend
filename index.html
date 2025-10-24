@@ -201,24 +201,24 @@
                     </div>
                 </div>
 
-                <div class="add-course-section">
-                    <h3>Add Course</h3>
-                    <form id="add-course-form" class="add-course-form">
-                        <input type="text" id="course-name" class="form-input" placeholder="Enter course name" required>
-                        <select id="course-year" class="form-input" required>
-                            <option value="">Select Year</option>
-                            <option value="Freshman">Freshman</option>
-                            <option value="Sophomore">Sophomore</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Senior">Senior</option>
-                        </select>
-                        <select id="course-term" class="form-input" required>
-                            <option value="">Select Term</option>
-                            <option value="Fall">Fall</option>
-                            <option value="Spring">Spring</option>
-                        </select>
-                        <button type="submit" class="btn btn-primary">Add Course</button>
-                    </form>
+                <div class="chatbot-section">
+                    <h3>AI Course Assistant</h3>
+                    <div class="chatbot-container">
+                        <div id="chatbot-messages" class="chatbot-messages">
+                            <div class="message bot-message">
+                                <div class="message-content">
+                                    <p>Hi! I'm your AI course planning assistant. Tell me what courses you'd like to add to your schedule, and I'll help you place them in the right year and term.</p>
+                                    <p><strong>Example:</strong> "Add AP Biology to Junior Fall" or "I want to take Spanish 2 in Sophomore Spring"</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chatbot-input-area">
+                            <div class="input-container">
+                                <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Type your course request here..." />
+                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
