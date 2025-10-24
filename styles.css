@@ -227,6 +227,7 @@ body {
 }
 
 .app-title-large {
+    font-family: Trebuchet MS, sans-serif;    
     font-size: 3rem;
     font-weight: 800;
     color: var(--primary-color);
@@ -235,8 +236,9 @@ body {
 }
 
 .tagline {
-    font-size: 0.875rem;
-    color: var(--gray-600);
+    font-family: Trebuchet MS, sans-serif;
+    font-size: 2rem;
+    color: var(--black-900);
 }
 
 .home-content {
