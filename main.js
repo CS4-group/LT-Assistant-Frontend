@@ -222,6 +222,8 @@ class App {
             Senior: { Fall: [], Spring: [] }
         };
 
+        this.expandedYear = null; // Track which year is expanded
+
         // Load saved planner data
         const saved = localStorage.getItem('coursePlanner');
         if (saved) {
@@ -229,8 +231,86 @@ class App {
             this.renderPlannerGrid();
         }
 
+        // Setup year expansion click handlers
+        this.setupYearExpansion();
+
         // Setup chatbot functionality
         this.setupChatbot();
+    }
+
+    setupYearExpansion() {
+        const yearSections = document.querySelectorAll('.year-section');
+        yearSections.forEach(section => {
+            const yearTitle = section.querySelector('.year-title');
+            if (yearTitle) {
+                yearTitle.style.cursor = 'pointer';
+                yearTitle.addEventListener('click', () => {
+                    const year = section.dataset.year;
+                    this.toggleYearExpansion(year);
+                });
+            }
+        });
+    }
+
+    toggleYearExpansion(year) {
+        if (this.expandedYear === year) {
+            // Collapse back to grid view
+            this.expandedYear = null;
+            this.renderGridView();
+        } else {
+            // Expand this year
+            this.expandedYear = year;
+            this.renderExpandedView(year);
+        }
+    }
+
+    renderGridView() {
+        const plannerGrid = document.querySelector('.planner-grid');
+        const yearSections = document.querySelectorAll('.year-section');
+        
+        // Show all year sections
+        yearSections.forEach(section => {
+            section.style.display = 'block';
+            section.classList.remove('expanded');
+        });
+        
+        // Reset grid layout
+        plannerGrid.style.gridTemplateColumns = '1fr 1fr';
+        
+        // Remove back button if exists
+        const backButton = document.querySelector('.back-to-grid-btn');
+        if (backButton) {
+            backButton.remove();
+        }
+    }
+
+    renderExpandedView(year) {
+        const plannerGrid = document.querySelector('.planner-grid');
+        const yearSections = document.querySelectorAll('.year-section');
+        
+        // Hide all year sections except the selected one
+        yearSections.forEach(section => {
+            if (section.dataset.year === year) {
+                section.style.display = 'block';
+                section.classList.add('expanded');
+            } else {
+                section.style.display = 'none';
+            }
+        });
+        
+        // Change grid layout to single column
+        plannerGrid.style.gridTemplateColumns = '1fr';
+        
+        // Add back button if it doesn't exist
+        if (!document.querySelector('.back-to-grid-btn')) {
+            const backButton = document.createElement('button');
+            backButton.className = 'btn btn-outline back-to-grid-btn';
+            backButton.textContent = '← Back to All Years';
+            backButton.onclick = () => this.toggleYearExpansion(year);
+            
+            const plannerHeader = document.querySelector('.planner-header .header-right');
+            plannerHeader.insertBefore(backButton, plannerHeader.firstChild);
+        }
     }
 
     async switchTab(tabName) {

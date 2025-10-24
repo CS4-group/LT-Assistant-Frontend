@@ -598,6 +598,18 @@ body {
     gap: 0.5rem;
 }
 
+.back-to-grid-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+.back-to-grid-btn:hover {
+    background-color: var(--primary-hover);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
 .planner-content {
     display: grid;
     grid-template-columns: 1100px 1fr;
@@ -629,6 +641,13 @@ body {
     border-radius: var(--border-radius);
     padding: 0.75rem;
     border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.year-section.expanded {
+    padding: 2rem;
+    border: 2px solid var(--primary-color);
+    box-shadow: var(--shadow-lg);
 }
 
 .year-title {
@@ -636,12 +655,38 @@ body {
     font-weight: 600;
     margin-bottom: 0.5rem;
     color: var(--gray-900);
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.year-title:hover {
+    background-color: var(--gray-100);
+    color: var(--primary-color);
+}
+
+.year-section.expanded .year-title {
+    font-size: 1.5rem;
+    text-align: center;
+    background-color: var(--primary-color);
+    color: var(--white);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.year-section.expanded .year-title:hover {
+    background-color: var(--primary-hover);
 }
 
 .terms-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
+}
+
+.year-section.expanded .terms-container {
+    gap: 1.5rem;
 }
 
 .term-section {
@@ -651,6 +696,11 @@ body {
     background: linear-gradient(135deg, var(--gray-50), var(--white));
 }
 
+.year-section.expanded .term-section {
+    padding: 1.5rem;
+    border: 2px solid var(--gray-300);
+}
+
 .term-section h4 {
     font-size: 0.75rem;
     font-weight: 600;
@@ -658,11 +708,25 @@ body {
     margin-bottom: 0.375rem;
 }
 
+.year-section.expanded .term-section h4 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    text-align: center;
+    border-bottom: 2px solid var(--gray-200);
+    padding-bottom: 0.5rem;
+}
+
 .course-slot {
     min-height: 80px;
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
+}
+
+.year-section.expanded .course-slot {
+    min-height: 200px;
+    gap: 0.75rem;
 }
 
 .course-item {
@@ -677,9 +741,20 @@ body {
     transition: var(--transition);
 }
 
+.year-section.expanded .course-item {
+    padding: 1rem;
+    font-size: 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
 .course-item:hover {
     box-shadow: var(--shadow-sm);
     border-color: var(--primary-color);
+}
+
+.year-section.expanded .course-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
 .course-name {
@@ -695,6 +770,12 @@ body {
     padding: 0.25rem;
     border-radius: 0.25rem;
     transition: var(--transition);
+    font-size: 1.25rem;
+}
+
+.year-section.expanded .remove-course {
+    font-size: 1.5rem;
+    padding: 0.5rem;
 }
 
 .remove-course:hover {
@@ -862,6 +943,10 @@ body {
         grid-template-columns: 1fr;
     }
     
+    .year-section.expanded .terms-container {
+        grid-template-columns: 1fr;
+    }
+    
     .planner-header {
         flex-direction: column;
         gap: 1rem;
@@ -914,11 +999,36 @@ body {
         padding: 0.25rem;
     }
     
+    .year-section.expanded .course-item {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+    }
+    
     .year-title {
         font-size: 0.875rem;
     }
     
+    .year-section.expanded .year-title {
+        font-size: 1.25rem;
+    }
+    
     .term-section h4 {
         font-size: 0.625rem;
+    }
+    
+    .year-section.expanded .term-section h4 {
+        font-size: 1rem;
+    }
+    
+    .year-section.expanded {
+        padding: 1rem;
+    }
+    
+    .year-section.expanded .term-section {
+        padding: 1rem;
+    }
+    
+    .year-section.expanded .course-slot {
+        min-height: 150px;
     }
 }
