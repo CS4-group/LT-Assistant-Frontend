@@ -272,6 +272,12 @@ class App {
         yearSections.forEach(section => {
             section.style.display = 'block';
             section.classList.remove('expanded');
+            
+            // Remove add course button if exists
+            const addCourseBtn = section.querySelector('.add-course-btn-expanded');
+            if (addCourseBtn) {
+                addCourseBtn.remove();
+            }
         });
         
         // Reset grid layout
@@ -293,6 +299,15 @@ class App {
             if (section.dataset.year === year) {
                 section.style.display = 'block';
                 section.classList.add('expanded');
+                
+                // Add "Add Course" button if it doesn't exist
+                if (!section.querySelector('.add-course-btn-expanded')) {
+                    const addCourseBtn = document.createElement('button');
+                    addCourseBtn.className = 'btn add-course-btn-expanded';
+                    addCourseBtn.textContent = '+ Add Course';
+                    addCourseBtn.onclick = () => this.openAddCourseModal(year);
+                    section.appendChild(addCourseBtn);
+                }
             } else {
                 section.style.display = 'none';
             }
@@ -304,13 +319,163 @@ class App {
         // Add back button if it doesn't exist
         if (!document.querySelector('.back-to-grid-btn')) {
             const backButton = document.createElement('button');
-            backButton.className = 'btn btn-outline back-to-grid-btn';
+            backButton.className = 'btn back-to-grid-btn';
             backButton.textContent = '← Back to All Years';
             backButton.onclick = () => this.toggleYearExpansion(year);
             
             const plannerHeader = document.querySelector('.planner-header .header-right');
             plannerHeader.insertBefore(backButton, plannerHeader.firstChild);
         }
+    }
+
+    async openAddCourseModal(year) {
+        // Fetch courses if not already loaded
+        if (!this.courseNames || this.courseNames.length === 0) {
+            await this.fetchCourseNames();
+        }
+
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+
+        // Create modal content
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+
+        // Modal header
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'modal-header';
+        modalHeader.innerHTML = `
+            <h2>Add Course to ${year} Year</h2>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+        `;
+
+        // Modal body
+        const modalBody = document.createElement('div');
+        modalBody.className = 'modal-body';
+
+        // Term selection
+        const termSection = document.createElement('div');
+        termSection.className = 'form-group';
+        termSection.innerHTML = `
+            <label class="form-label">Select Term</label>
+            <select id="term-select" class="form-input">
+                <option value="Fall">Fall</option>
+                <option value="Spring">Spring</option>
+            </select>
+        `;
+
+        // Course dropdown
+        const courseSection = document.createElement('div');
+        courseSection.className = 'form-group';
+        const courseLabel = document.createElement('label');
+        courseLabel.className = 'form-label';
+        courseLabel.textContent = 'Select Course';
+        
+        const courseSelect = document.createElement('select');
+        courseSelect.id = 'course-select';
+        courseSelect.className = 'form-input';
+        
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Choose a course...';
+        courseSelect.appendChild(defaultOption);
+        
+        // Add course options
+        this.courseNames.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = course.title;
+            courseSelect.appendChild(option);
+        });
+
+        courseSection.appendChild(courseLabel);
+        courseSection.appendChild(courseSelect);
+
+        // Course description display
+        const descriptionSection = document.createElement('div');
+        descriptionSection.className = 'form-group';
+        descriptionSection.innerHTML = `
+            <label class="form-label">Course Description</label>
+            <div id="course-description" class="course-description-box">
+                <p class="text-muted">Select a course to view its description</p>
+            </div>
+        `;
+
+        // Add change listener to course select
+        courseSelect.addEventListener('change', async (e) => {
+            const courseId = e.target.value;
+            const descBox = document.getElementById('course-description');
+            
+            if (courseId) {
+                descBox.innerHTML = '<p class="text-muted">Loading...</p>';
+                const courseDetails = await this.fetchCourseDetails(courseId);
+                
+                if (courseDetails) {
+                    descBox.innerHTML = `<p>${courseDetails.description}</p>`;
+                } else {
+                    descBox.innerHTML = '<p class="text-muted">Failed to load description</p>';
+                }
+            } else {
+                descBox.innerHTML = '<p class="text-muted">Select a course to view its description</p>';
+            }
+        });
+
+        modalBody.appendChild(termSection);
+        modalBody.appendChild(courseSection);
+        modalBody.appendChild(descriptionSection);
+
+        // Modal footer
+        const modalFooter = document.createElement('div');
+        modalFooter.className = 'modal-footer';
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-outline';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => modal.remove();
+        
+        const addBtn = document.createElement('button');
+        addBtn.className = 'btn btn-primary';
+        addBtn.textContent = 'Add Course';
+        addBtn.onclick = () => {
+            const courseId = courseSelect.value;
+            const term = document.getElementById('term-select').value;
+            
+            if (!courseId) {
+                this.showToast('Please select a course', 'error');
+                return;
+            }
+            
+            const selectedCourse = this.courseNames.find(c => String(c.id) === String(courseId));
+            if (selectedCourse) {
+                const result = this.addCourseFromChatbot(selectedCourse.title, year, term);
+                if (result.success) {
+                    modal.remove();
+                } else {
+                    this.showToast(result.message, 'error');
+                }
+            } else {
+                this.showToast('Course not found. Please try again.', 'error');
+            }
+        };
+
+        modalFooter.appendChild(cancelBtn);
+        modalFooter.appendChild(addBtn);
+
+        // Assemble modal
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modalContent.appendChild(modalFooter);
+        modal.appendChild(modalContent);
+
+        // Add to page
+        document.body.appendChild(modal);
     }
 
     async switchTab(tabName) {
