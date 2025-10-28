@@ -183,6 +183,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    z-index: 1;
 }
 
 .login-header {
@@ -214,7 +215,7 @@ body {
     z-index: 1;
 }
 
-.home-bg, .page-bg {
+.home-bg, .page-bg, .login-bg {
     position: fixed;
     inset: 0;
     z-index: 0;
@@ -242,6 +243,17 @@ body {
     position: relative;
     z-index: 2;
 }
+
+.login-page-header {
+    padding-top: 4rem;
+    padding-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    gap: 2rem;
+    position: relative;
+    z-index: 2;
+  }
 
 .logo {
     height: 6rem;
