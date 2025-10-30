@@ -628,38 +628,219 @@ class App {
     }
 
     async openAddReviewModal() {
-        let item = null;
-        
-        // Get item details based on current tab
-        if (this.currentTab === 'courses') {
-            item = this.courseDetails[this.selectedItemId];
-            if (!item) {
-                // If not cached, fetch it
-                item = await this.fetchCourseDetails(this.selectedItemId);
-            }
-        } else {
-            const data = window.mockData[this.currentTab] || [];
-            item = data.find(i => i._id === this.selectedItemId);
+        // Fetch courses if not already loaded (needed for dropdown)
+        if (!this.courseNames || this.courseNames.length === 0) {
+            await this.fetchCourseNames();
         }
-        
-        if (!item) return;
 
-        const rating = prompt(`Rate ${item.title} (1-5 stars):`);
-        const comment = prompt(`Add your comment about ${item.title}:`);
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+
+        // Create modal content
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+
+        // Modal header
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'modal-header';
+        modalHeader.innerHTML = `
+            <h2>Add Review</h2>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+        `;
+
+        // Modal body
+        const modalBody = document.createElement('div');
+        modalBody.className = 'modal-body';
+
+        // Course dropdown section
+        const courseSection = document.createElement('div');
+        courseSection.className = 'form-group';
+        const courseLabel = document.createElement('label');
+        courseLabel.className = 'form-label';
+        courseLabel.textContent = 'Select Course';
         
-        if (rating && comment && rating >= 1 && rating <= 5) {
+        const courseSelect = document.createElement('select');
+        courseSelect.id = 'review-course-select';
+        courseSelect.className = 'form-input';
+        
+        // Add default option
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Choose a course...';
+        courseSelect.appendChild(defaultOption);
+        
+        // Add course options
+        this.courseNames.forEach(course => {
+            const option = document.createElement('option');
+            option.value = course.id;
+            option.textContent = course.title;
+            // Pre-select if we have a selected item
+            if (this.selectedItemId && String(course.id) === String(this.selectedItemId)) {
+                option.selected = true;
+            }
+            courseSelect.appendChild(option);
+        });
+
+        courseSection.appendChild(courseLabel);
+        courseSection.appendChild(courseSelect);
+
+        // Star rating section
+        const ratingSection = document.createElement('div');
+        ratingSection.className = 'form-group rating-form-group';
+        ratingSection.innerHTML = `
+            <label class="form-label">Rating</label>
+            <div id="star-rating" class="star-rating">
+                <span class="star" data-rating="1">☆</span>
+                <span class="star" data-rating="2">☆</span>
+                <span class="star" data-rating="3">☆</span>
+                <span class="star" data-rating="4">☆</span>
+                <span class="star" data-rating="5">☆</span>
+            </div>
+        `;
+
+        // Description section
+        const descriptionSection = document.createElement('div');
+        descriptionSection.className = 'form-group';
+        descriptionSection.innerHTML = `
+            <label class="form-label">Your Review</label>
+            <textarea id="review-description" class="form-input review-textarea" 
+                      placeholder="Share your experience with this course..." rows="5"></textarea>
+            <p id="filter-warning" class="filter-warning hidden">Please avoid using inappropriate language.</p>
+        `;
+
+        modalBody.appendChild(courseSection);
+        modalBody.appendChild(ratingSection);
+        modalBody.appendChild(descriptionSection);
+
+        // Modal footer
+        const modalFooter = document.createElement('div');
+        modalFooter.className = 'modal-footer';
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-outline';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => modal.remove();
+        
+        const submitBtn = document.createElement('button');
+        submitBtn.className = 'btn btn-primary';
+        submitBtn.textContent = 'Submit Review';
+        
+        modalFooter.appendChild(cancelBtn);
+        modalFooter.appendChild(submitBtn);
+
+        // Assemble modal
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modalContent.appendChild(modalFooter);
+        modal.appendChild(modalContent);
+
+        // Add to page
+        document.body.appendChild(modal);
+
+        // Star rating logic
+        let selectedRating = 0;
+        const stars = modal.querySelectorAll('.star');
+        
+        const updateStarDisplay = (rating) => {
+            stars.forEach((s, i) => {
+                if (i < rating) {
+                    s.textContent = '★';
+                    s.classList.add('filled');
+                } else {
+                    s.textContent = '☆';
+                    s.classList.remove('filled');
+                }
+            });
+        };
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseenter', () => {
+                updateStarDisplay(index + 1);
+            });
+            
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                updateStarDisplay(selectedRating);
+            });
+        });
+
+        modal.querySelector('.star-rating').addEventListener('mouseleave', () => {
+            updateStarDisplay(selectedRating);
+        });
+
+        // Bad word filtering on textarea
+        const textarea = document.getElementById('review-description');
+        const filterWarning = document.getElementById('filter-warning');
+        
+        textarea.addEventListener('input', () => {
+            const originalText = textarea.value;
+            const filteredText = this.filterBadWords(originalText);
+            
+            if (originalText !== filteredText) {
+                filterWarning.classList.remove('hidden');
+                setTimeout(() => {
+                    filterWarning.classList.add('hidden');
+                }, 3000);
+            }
+            
+            textarea.value = filteredText;
+        });
+
+        // Submit handler
+        submitBtn.onclick = async () => {
+            const courseId = courseSelect.value;
+            const description = textarea.value.trim();
+            
+            if (!courseId) {
+                this.showToast('Please select a course', 'error');
+                return;
+            }
+            
+            if (selectedRating === 0) {
+                this.showToast('Please select a rating', 'error');
+                return;
+            }
+            
+            if (!description) {
+                this.showToast('Please write a review', 'error');
+                return;
+            }
+            
+            // Create review
             const newReview = {
-                id: `review-${this.selectedItemId}-${Date.now()}`,
-                itemId: this.selectedItemId,
+                id: `review-${courseId}-${Date.now()}`,
+                itemId: courseId,
                 user: { name: 'Current User', avatarUrl: 'https://i.pravatar.cc/150?u=currentUser' },
-                rating: parseInt(rating),
-                comment: comment
+                rating: selectedRating,
+                comment: description
             };
             
             window.mockData.reviews.push(newReview);
-            await this.updateItemDetails();
+            
+            // If the review is for the currently selected item, refresh details
+            if (String(courseId) === String(this.selectedItemId)) {
+                await this.updateItemDetails();
+            }
+            
+            modal.remove();
             this.showToast('Review added successfully!', 'success');
-        }
+        };
+    }
+
+    filterBadWords(text) {
+        // List of bad words to filter (you can expand this list)
+       
+        
+        let filteredText = text;
+        
+               
+        return filteredText;
     }
 
     setupChatbot() {
