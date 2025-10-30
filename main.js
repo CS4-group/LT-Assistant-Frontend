@@ -6,6 +6,10 @@ class App {
         this.apiBaseUrl = 'http://localhost:3000'; // Configure your API base URL here
         this.courseNames = []; // Cache for course names
         this.courseDetails = {}; // Cache for individual course details
+        this.clubs = []; // Cache for clubs
+        this.clubDetails = {}; // Cache for individual club details
+        this.teachers = []; // Cache for teachers
+        this.teacherDetails = {}; // Cache for individual teacher details
         this.init();
     }
 
@@ -69,6 +73,130 @@ class App {
         } catch (error) {
             console.error('Error fetching course details:', error);
             this.showToast(`Failed to load course details: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
+    async fetchClubs() {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/clubs`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                this.clubs = result.data.map(club => ({
+                    id: club.id,
+                    title: club.name,
+                    description: club.description,
+                    meetingDay: club.meetingDay,
+                    rating: club.rating
+                }));
+                return this.clubs;
+            } else {
+                throw new Error(result.message || 'Failed to fetch clubs');
+            }
+        } catch (error) {
+            console.error('Error fetching clubs:', error);
+            this.showToast('Failed to load clubs. Please try again.', 'error');
+            return [];
+        }
+    }
+
+    async fetchClubDetails(clubId) {
+        // Check cache first
+        if (this.clubDetails[clubId]) {
+            return this.clubDetails[clubId];
+        }
+
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/clubs/${clubId}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Club not found');
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                // Cache the result
+                const club = result.data;
+                this.clubDetails[clubId] = {
+                    id: club.id,
+                    title: club.name,
+                    description: club.description,
+                    meetingDay: club.meetingDay,
+                    rating: club.rating
+                };
+                return this.clubDetails[clubId];
+            } else {
+                throw new Error(result.message || 'Failed to fetch club details');
+            }
+        } catch (error) {
+            console.error('Error fetching club details:', error);
+            this.showToast(`Failed to load club details: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
+    async fetchTeachers() {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/teachers`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                this.teachers = result.data.map(teacher => ({
+                    id: teacher.id,
+                    title: teacher.name,
+                    description: teacher.department,
+                    courses: teacher.courses,
+                    rating: teacher.rating
+                }));
+                return this.teachers;
+            } else {
+                throw new Error(result.message || 'Failed to fetch teachers');
+            }
+        } catch (error) {
+            console.error('Error fetching teachers:', error);
+            this.showToast('Failed to load teachers. Please try again.', 'error');
+            return [];
+        }
+    }
+
+    async fetchTeacherDetails(teacherId) {
+        // Check cache first
+        if (this.teacherDetails[teacherId]) {
+            return this.teacherDetails[teacherId];
+        }
+
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/teachers/${teacherId}`);
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Teacher not found');
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                // Cache the result
+                const teacher = result.data;
+                this.teacherDetails[teacherId] = {
+                    id: teacher.id,
+                    title: teacher.name,
+                    description: teacher.department,
+                    courses: teacher.courses,
+                    rating: teacher.rating
+                };
+                return this.teacherDetails[teacherId];
+            } else {
+                throw new Error(result.message || 'Failed to fetch teacher details');
+            }
+        } catch (error) {
+            console.error('Error fetching teacher details:', error);
+            this.showToast(`Failed to load teacher details: ${error.message}`, 'error');
             return null;
         }
     }
@@ -205,10 +333,17 @@ class App {
     async loadInitialData() {
         // Show loading state
         const itemsList = document.getElementById('items-list');
-        itemsList.innerHTML = '<div class="loading-state">Loading courses...</div>';
+        const loadingText = this.currentTab === 'courses' ? 'Loading courses...' : 
+                           this.currentTab === 'clubs' ? 'Loading clubs...' : 
+                           'Loading teachers...';
+        itemsList.innerHTML = `<div class="loading-state">${loadingText}</div>`;
         
         if (this.currentTab === 'courses') {
             await this.fetchCourseNames();
+        } else if (this.currentTab === 'clubs') {
+            await this.fetchClubs();
+        } else if (this.currentTab === 'teachers') {
+            await this.fetchTeachers();
         }
         
         this.updateItemsList();
@@ -501,23 +636,21 @@ class App {
         // Disable add review button until item is selected
         document.getElementById('header-add-review-btn').disabled = true;
 
-        // Load data for the selected tab
-        if (tabName === 'courses') {
-            await this.loadInitialData();
-        } else {
-            this.updateItemsList();
-        }
+        // Load data for the selected tab from API
+        await this.loadInitialData();
     }
 
     updateItemsList() {
         const itemsList = document.getElementById('items-list');
         let data = [];
         
-        // Use API data for courses, mock data for others
+        // Use API data for all tabs
         if (this.currentTab === 'courses') {
             data = this.courseNames;
-        } else {
-            data = window.mockData[this.currentTab] || [];
+        } else if (this.currentTab === 'clubs') {
+            data = this.clubs;
+        } else if (this.currentTab === 'teachers') {
+            data = this.teachers;
         }
         
         const filteredData = data.filter(item => 
@@ -526,24 +659,31 @@ class App {
 
         // Handle empty data
         if (filteredData.length === 0) {
-            itemsList.innerHTML = this.currentTab === 'courses' && this.courseNames.length === 0
-                ? '<div class="loading-state">No courses available</div>'
-                : '<div class="loading-state">No items found</div>';
+            const emptyMessage = data.length === 0 
+                ? `No ${this.currentTab} available` 
+                : 'No items found';
+            itemsList.innerHTML = `<div class="loading-state">${emptyMessage}</div>`;
             this.selectedItemId = null;
             this.updateItemDetails();
             return;
         }
 
-        // Use appropriate ID field based on data source
-        const getItemId = (item) => this.currentTab === 'courses' ? item.id : item._id;
-        const getItemDescription = (item) => this.currentTab === 'courses' ? 'Click to view details' : item.description;
+        // All data from API uses 'id' field
+        const getItemDescription = (item) => {
+            if (this.currentTab === 'courses') {
+                return 'Click to view details';
+            } else if (this.currentTab === 'clubs') {
+                return item.meetingDay ? `Meets: ${item.meetingDay}` : item.description;
+            } else {
+                return item.description; // Department for teachers
+            }
+        };
 
         itemsList.innerHTML = filteredData.map(item => {
-            const itemId = getItemId(item);
-            const isSelected = String(this.selectedItemId) === String(itemId);
+            const isSelected = String(this.selectedItemId) === String(item.id);
             return `
                 <div class="item-card ${isSelected ? 'selected' : ''}" 
-                     onclick="window.app.selectItem('${itemId}')">
+                     onclick="window.app.selectItem('${item.id}')">
                     <div class="item-title">${item.title}</div>
                     <div class="item-description">${getItemDescription(item)}</div>
                 </div>
@@ -552,7 +692,7 @@ class App {
 
         // Auto-select first item if none selected
         if (!this.selectedItemId && filteredData.length > 0) {
-            this.selectItem(getItemId(filteredData[0]));
+            this.selectItem(filteredData[0].id);
         } else if (filteredData.length === 0) {
             this.selectedItemId = null;
             this.updateItemDetails();
@@ -563,10 +703,11 @@ class App {
         this.selectedItemId = String(itemId); // Ensure consistent string storage
         this.updateItemsList(); // Refresh to show selection
         
-        // Show loading state for course details
-        if (this.currentTab === 'courses') {
-            document.getElementById('item-details').innerHTML = '<div class="loading-state">Loading course details...</div>';
-        }
+        // Show loading state for item details
+        const loadingText = this.currentTab === 'courses' ? 'Loading course details...' :
+                           this.currentTab === 'clubs' ? 'Loading club details...' :
+                           'Loading teacher details...';
+        document.getElementById('item-details').innerHTML = `<div class="loading-state">${loadingText}</div>`;
         
         await this.updateItemDetails();
         
@@ -584,20 +725,23 @@ class App {
 
         let item = null;
         
-        // Handle courses vs other items differently
+        // Fetch full details from API based on current tab
         if (this.currentTab === 'courses') {
-            // Fetch full course details from API
             item = await this.fetchCourseDetails(this.selectedItemId);
             if (!item) {
                 itemDetails.innerHTML = '<p>Failed to load course details.</p>';
                 return;
             }
-        } else {
-            // Use mock data for other tabs
-            const data = window.mockData[this.currentTab] || [];
-            item = data.find(i => i._id === this.selectedItemId);
+        } else if (this.currentTab === 'clubs') {
+            item = await this.fetchClubDetails(this.selectedItemId);
             if (!item) {
-                itemDetails.innerHTML = '<p>Item not found.</p>';
+                itemDetails.innerHTML = '<p>Failed to load club details.</p>';
+                return;
+            }
+        } else if (this.currentTab === 'teachers') {
+            item = await this.fetchTeacherDetails(this.selectedItemId);
+            if (!item) {
+                itemDetails.innerHTML = '<p>Failed to load teacher details.</p>';
                 return;
             }
         }
@@ -605,10 +749,19 @@ class App {
         // Get reviews (still from mock data for now - this could be extended later)
         const reviews = window.mockData.reviews.filter(r => r.itemId === this.selectedItemId);
         
+        // Build additional info based on item type
+        let additionalInfo = '';
+        if (this.currentTab === 'clubs' && item.meetingDay) {
+            additionalInfo = `<p><strong>Meeting Day:</strong> ${item.meetingDay}</p>`;
+        } else if (this.currentTab === 'teachers' && item.courses && item.courses.length > 0) {
+            additionalInfo = `<p><strong>Courses:</strong> ${item.courses.join(', ')}</p>`;
+        }
+        
         itemDetails.innerHTML = `
             <h2>${item.title}</h2>
             <h3>Description</h3>
             <p>${item.description}</p>
+            ${additionalInfo}
             <div class="reviews-section">
                 <h3>Reviews for ${item.title}</h3>
                 ${reviews.length > 0 ? 
@@ -1164,22 +1317,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Mock data for features not yet integrated with backend
 window.mockData = {
-    clubs: [
-        {
-            _id: 'club-1',
-            title: 'Tuff Club',
-            description: 'tuffness incarnate'
-        }
-    ],
-    teachers: [
-        {
-            _id: 'teacher-1',
-            title: 'Mr. Tuff',
-            description: 'tuffness embodied'
-        }
-    ],
     reviews: [
         // Reviews can be associated with any item by itemId
-        // For courses, use the course ID from the API
+        // For courses, clubs, and teachers, use the item ID from the API
     ]
 };
