@@ -201,6 +201,57 @@ class App {
         }
     }
 
+    async fetchReviews(entityType, entityId) {
+        try {
+            const url = `${this.apiBaseUrl}/api/reviews?entityType=${entityType}&entityId=${entityId}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            if (result.success) {
+                return result.data;
+            } else {
+                throw new Error(result.message || 'Failed to fetch reviews');
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+            return [];
+        }
+    }
+
+    async createReview(entityType, entityId, rating, text) {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/api/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    entityType,
+                    entityId,
+                    rating,
+                    text
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success) {
+                return result.data;
+            } else {
+                throw new Error(result.message || 'Failed to create review');
+            }
+        } catch (error) {
+            console.error('Error creating review:', error);
+            throw error;
+        }
+    }
+
     handleRouting() {
         const path = window.location.hash.slice(1) || '/';
         
@@ -724,30 +775,34 @@ class App {
         }
 
         let item = null;
+        let entityType = '';
         
         // Fetch full details from API based on current tab
         if (this.currentTab === 'courses') {
             item = await this.fetchCourseDetails(this.selectedItemId);
+            entityType = 'course';
             if (!item) {
                 itemDetails.innerHTML = '<p>Failed to load course details.</p>';
                 return;
             }
         } else if (this.currentTab === 'clubs') {
             item = await this.fetchClubDetails(this.selectedItemId);
+            entityType = 'club';
             if (!item) {
                 itemDetails.innerHTML = '<p>Failed to load club details.</p>';
                 return;
             }
         } else if (this.currentTab === 'teachers') {
             item = await this.fetchTeacherDetails(this.selectedItemId);
+            entityType = 'teacher';
             if (!item) {
                 itemDetails.innerHTML = '<p>Failed to load teacher details.</p>';
                 return;
             }
         }
 
-        // Get reviews (still from mock data for now - this could be extended later)
-        const reviews = window.mockData.reviews.filter(r => r.itemId === this.selectedItemId);
+        // Fetch reviews from backend API
+        const reviews = await this.fetchReviews(entityType, this.selectedItemId);
         
         // Build additional info based on item type
         let additionalInfo = '';
@@ -768,10 +823,10 @@ class App {
                     reviews.map(review => `
                         <div class="review-card">
                             <div class="review-header">
-                                <strong>${review.user.name}</strong>
+                                <strong>Anonymous User</strong>
                                 <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
                             </div>
-                            <p>${review.comment}</p>
+                            ${review.text ? `<p>${review.text}</p>` : '<p><em>No comment provided</em></p>'}
                         </div>
                     `).join('') :
                     '<p>No reviews yet. Be the first to add one!</p>'
@@ -781,9 +836,32 @@ class App {
     }
 
     async openAddReviewModal() {
-        // Fetch courses if not already loaded (needed for dropdown)
-        if (!this.courseNames || this.courseNames.length === 0) {
-            await this.fetchCourseNames();
+        // Fetch appropriate data based on current tab
+        let itemsList = [];
+        let itemTypeSingular = '';
+        let itemTypePlural = '';
+        
+        if (this.currentTab === 'courses') {
+            if (!this.courseNames || this.courseNames.length === 0) {
+                await this.fetchCourseNames();
+            }
+            itemsList = this.courseNames;
+            itemTypeSingular = 'Course';
+            itemTypePlural = 'course';
+        } else if (this.currentTab === 'clubs') {
+            if (!this.clubs || this.clubs.length === 0) {
+                await this.fetchClubs();
+            }
+            itemsList = this.clubs;
+            itemTypeSingular = 'Club';
+            itemTypePlural = 'club';
+        } else if (this.currentTab === 'teachers') {
+            if (!this.teachers || this.teachers.length === 0) {
+                await this.fetchTeachers();
+            }
+            itemsList = this.teachers;
+            itemTypeSingular = 'Teacher';
+            itemTypePlural = 'teacher';
         }
 
         // Create modal overlay
@@ -811,37 +889,37 @@ class App {
         const modalBody = document.createElement('div');
         modalBody.className = 'modal-body';
 
-        // Course dropdown section
-        const courseSection = document.createElement('div');
-        courseSection.className = 'form-group';
-        const courseLabel = document.createElement('label');
-        courseLabel.className = 'form-label';
-        courseLabel.textContent = 'Select Course';
+        // Item dropdown section
+        const itemSection = document.createElement('div');
+        itemSection.className = 'form-group';
+        const itemLabel = document.createElement('label');
+        itemLabel.className = 'form-label';
+        itemLabel.textContent = `Select ${itemTypeSingular}`;
         
-        const courseSelect = document.createElement('select');
-        courseSelect.id = 'review-course-select';
-        courseSelect.className = 'form-input';
+        const itemSelect = document.createElement('select');
+        itemSelect.id = 'review-item-select';
+        itemSelect.className = 'form-input';
         
         // Add default option
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
-        defaultOption.textContent = 'Choose a course...';
-        courseSelect.appendChild(defaultOption);
+        defaultOption.textContent = `Choose a ${itemTypePlural}...`;
+        itemSelect.appendChild(defaultOption);
         
-        // Add course options
-        this.courseNames.forEach(course => {
+        // Add item options
+        itemsList.forEach(item => {
             const option = document.createElement('option');
-            option.value = course.id;
-            option.textContent = course.title;
+            option.value = item.id;
+            option.textContent = item.title;
             // Pre-select if we have a selected item
-            if (this.selectedItemId && String(course.id) === String(this.selectedItemId)) {
+            if (this.selectedItemId && String(item.id) === String(this.selectedItemId)) {
                 option.selected = true;
             }
-            courseSelect.appendChild(option);
+            itemSelect.appendChild(option);
         });
 
-        courseSection.appendChild(courseLabel);
-        courseSection.appendChild(courseSelect);
+        itemSection.appendChild(itemLabel);
+        itemSection.appendChild(itemSelect);
 
         // Star rating section
         const ratingSection = document.createElement('div');
@@ -863,11 +941,11 @@ class App {
         descriptionSection.innerHTML = `
             <label class="form-label">Your Review</label>
             <textarea id="review-description" class="form-input review-textarea" 
-                      placeholder="Share your experience with this course..." rows="5"></textarea>
+                      placeholder="Share your experience with this ${itemTypePlural}..." rows="5"></textarea>
             <p id="filter-warning" class="filter-warning hidden">Please avoid using inappropriate language.</p>
         `;
 
-        modalBody.appendChild(courseSection);
+        modalBody.appendChild(itemSection);
         modalBody.appendChild(ratingSection);
         modalBody.appendChild(descriptionSection);
 
@@ -947,11 +1025,11 @@ class App {
 
         // Submit handler
         submitBtn.onclick = async () => {
-            const courseId = courseSelect.value;
+            const itemId = itemSelect.value;
             const description = textarea.value.trim();
             
-            if (!courseId) {
-                this.showToast('Please select a course', 'error');
+            if (!itemId) {
+                this.showToast(`Please select a ${itemTypePlural}`, 'error');
                 return;
             }
             
@@ -965,24 +1043,36 @@ class App {
                 return;
             }
             
-            // Create review
-            const newReview = {
-                id: `review-${courseId}-${Date.now()}`,
-                itemId: courseId,
-                user: { name: 'Current User', avatarUrl: 'https://i.pravatar.cc/150?u=currentUser' },
-                rating: selectedRating,
-                comment: description
-            };
-            
-            window.mockData.reviews.push(newReview);
-            
-            // If the review is for the currently selected item, refresh details
-            if (String(courseId) === String(this.selectedItemId)) {
-                await this.updateItemDetails();
+            // Determine entity type based on current tab
+            let entityType = '';
+            if (this.currentTab === 'courses') {
+                entityType = 'course';
+            } else if (this.currentTab === 'clubs') {
+                entityType = 'club';
+            } else if (this.currentTab === 'teachers') {
+                entityType = 'teacher';
             }
             
-            modal.remove();
-            this.showToast('Review added successfully!', 'success');
+            try {
+                // Disable submit button to prevent double submission
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
+                // Create review via API
+                await this.createReview(entityType, parseInt(itemId), selectedRating, description);
+                
+                // If the review is for the currently selected item, refresh details
+                if (String(itemId) === String(this.selectedItemId)) {
+                    await this.updateItemDetails();
+                }
+                
+                modal.remove();
+                this.showToast('Review added successfully!', 'success');
+            } catch (error) {
+                this.showToast(error.message || 'Failed to add review', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
+            }
         };
     }
 
