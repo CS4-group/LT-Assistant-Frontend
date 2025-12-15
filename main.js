@@ -557,33 +557,22 @@ class App {
             </select>
         `;
 
-        // Course dropdown
+        // Course dropdown (Searchable)
         const courseSection = document.createElement('div');
         courseSection.className = 'form-group';
-        const courseLabel = document.createElement('label');
-        courseLabel.className = 'form-label';
-        courseLabel.textContent = 'Select Course';
+        courseSection.innerHTML = `<label class="form-label">Select Course</label>`;
 
-        const courseSelect = document.createElement('select');
-        courseSelect.id = 'course-select';
-        courseSelect.className = 'form-input';
+        let selectedCourseId = '';
 
-        // Add default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Choose a course...';
-        courseSelect.appendChild(defaultOption);
+        // Prepare items for dropdown
+        const courseItems = this.courseNames.map(c => ({
+            value: c.id,
+            label: c.title,
+            data: c
+        }));
 
-        // Add course options
-        this.courseNames.forEach(course => {
-            const option = document.createElement('option');
-            option.value = course.id;
-            option.textContent = course.title;
-            courseSelect.appendChild(option);
-        });
-
-        courseSection.appendChild(courseLabel);
-        courseSection.appendChild(courseSelect);
+        const dropdownContainer = document.createElement('div');
+        courseSection.appendChild(dropdownContainer);
 
         // Course description display
         const descriptionSection = document.createElement('div');
@@ -595,14 +584,14 @@ class App {
             </div>
         `;
 
-        // Add change listener to course select
-        courseSelect.addEventListener('change', async (e) => {
-            const courseId = e.target.value;
+        // Initialize custom dropdown
+        this.createSearchableDropdown(dropdownContainer, courseItems, 'Search for a course...', async (selectedValue) => {
+            selectedCourseId = selectedValue;
             const descBox = document.getElementById('course-description');
 
-            if (courseId) {
+            if (selectedValue) {
                 descBox.innerHTML = '<p class="text-muted">Loading...</p>';
-                const courseDetails = await this.fetchCourseDetails(courseId);
+                const courseDetails = await this.fetchCourseDetails(selectedValue);
 
                 if (courseDetails) {
                     descBox.innerHTML = `<p>${courseDetails.description}</p>`;
@@ -631,15 +620,14 @@ class App {
         addBtn.className = 'btn btn-primary';
         addBtn.textContent = 'Add Course';
         addBtn.onclick = () => {
-            const courseId = courseSelect.value;
             const term = document.getElementById('term-select').value;
 
-            if (!courseId) {
+            if (!selectedCourseId) {
                 this.showToast('Please select a course', 'error');
                 return;
             }
 
-            const selectedCourse = this.courseNames.find(c => String(c.id) === String(courseId));
+            const selectedCourse = this.courseNames.find(c => String(c.id) === String(selectedCourseId));
             if (selectedCourse) {
                 const result = this.addCourseFromChatbot(selectedCourse.title, year, term);
                 if (result.success) {
@@ -915,39 +903,34 @@ class App {
         const modalBody = document.createElement('div');
         modalBody.className = 'modal-body';
 
-        // Item dropdown section
+        // Item dropdown section (Searchable)
         const itemSection = document.createElement('div');
         itemSection.className = 'form-group';
-        const itemLabel = document.createElement('label');
-        itemLabel.className = 'form-label';
-        itemLabel.textContent = `Select ${itemTypeSingular}`;
+        itemSection.innerHTML = `<label class="form-label">Select ${itemTypeSingular}</label>`;
 
-        const itemSelect = document.createElement('select');
-        itemSelect.id = 'review-item-select';
-        itemSelect.className = 'form-input';
+        let selectedItemIdFromDropdown = '';
+        if (this.selectedItemId) {
+            selectedItemIdFromDropdown = this.selectedItemId;
+        }
 
-        // Add default option
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = `Choose a ${itemTypePlural}...`;
-        itemSelect.appendChild(defaultOption);
+        const dropdownContainer = document.createElement('div');
+        itemSection.appendChild(dropdownContainer);
 
-        // Add item options
-        itemsList.forEach(item => {
-            const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = item.title;
-            // Pre-select if we have a selected item
-            if (this.selectedItemId && String(item.id) === String(this.selectedItemId)) {
-                option.selected = true;
-            }
-            itemSelect.appendChild(option);
+        // Prepare data for dropdown
+        const dropdownItems = itemsList.map(item => ({
+            value: item.id,
+            label: item.title,
+            data: item
+        }));
+
+        const initialPlaceholder = this.selectedItemId
+            ? itemsList.find(i => String(i.id) === String(this.selectedItemId))?.title
+            : `Choose a ${itemTypePlural}...`;
+
+        this.createSearchableDropdown(dropdownContainer, dropdownItems, initialPlaceholder || 'Select...', (val) => {
+            selectedItemIdFromDropdown = val;
         });
 
-        itemSection.appendChild(itemLabel);
-        itemSection.appendChild(itemSelect);
-
-        // Star rating section
         const ratingSection = document.createElement('div');
         ratingSection.className = 'form-group rating-form-group';
         ratingSection.innerHTML = `
@@ -1051,7 +1034,7 @@ class App {
 
         // Submit handler
         submitBtn.onclick = async () => {
-            const itemId = itemSelect.value;
+            const itemId = selectedItemIdFromDropdown;
             const description = textarea.value.trim();
 
             if (!itemId) {
@@ -1402,8 +1385,121 @@ class App {
             setTimeout(() => toast.remove(), 300);
         }, 3000);
     }
-}
 
+    createSearchableDropdown(container, items, placeholder, onSelect) {
+        // Create DOM structure
+        container.className = 'custom-dropdown';
+
+        const selectedDisplay = document.createElement('div');
+        selectedDisplay.className = 'dropdown-selected';
+        selectedDisplay.textContent = placeholder;
+
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.className = 'dropdown-container';
+
+        const searchDiv = document.createElement('div');
+        searchDiv.className = 'dropdown-search';
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = 'Type to search...';
+        searchDiv.appendChild(searchInput);
+
+        const listDiv = document.createElement('div');
+        listDiv.className = 'dropdown-list';
+
+        dropdownContainer.appendChild(searchDiv);
+        dropdownContainer.appendChild(listDiv);
+
+        container.appendChild(selectedDisplay);
+        container.appendChild(dropdownContainer);
+
+        let isOpen = false;
+        let selectedValue = null;
+
+        // Render items function
+        const renderItems = (filterText = '') => {
+            listDiv.innerHTML = '';
+
+            const filteredItems = items.filter(item =>
+                item.label.toLowerCase().includes(filterText.toLowerCase())
+            );
+
+            if (filteredItems.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.className = 'dropdown-item no-results';
+                noResult.textContent = 'No results found';
+                listDiv.appendChild(noResult);
+                return;
+            }
+
+            filteredItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `dropdown-item ${item.value === selectedValue ? 'selected' : ''}`;
+                itemDiv.textContent = item.label;
+                itemDiv.onclick = (e) => {
+                    e.stopPropagation();
+                    selectItem(item);
+                };
+                listDiv.appendChild(itemDiv);
+            });
+        };
+
+        const selectItem = (item) => {
+            selectedValue = item.value;
+            selectedDisplay.textContent = item.label;
+            closeDropdown();
+            if (onSelect) onSelect(item.value);
+        };
+
+        const openDropdown = () => {
+            isOpen = true;
+            dropdownContainer.classList.add('open');
+            selectedDisplay.classList.add('open');
+            searchInput.value = '';
+            searchInput.focus();
+            renderItems();
+
+            // Close other dropdowns
+            document.dispatchEvent(new CustomEvent('closeAllDropdowns', { detail: { except: container } }));
+        };
+
+        const closeDropdown = () => {
+            isOpen = false;
+            dropdownContainer.classList.remove('open');
+            selectedDisplay.classList.remove('open');
+        };
+
+        // Event Listeners
+        selectedDisplay.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isOpen) closeDropdown();
+            else openDropdown();
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            renderItems(e.target.value);
+        });
+
+        searchInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!container.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        // Handle custom event to close other dropdowns
+        document.addEventListener('closeAllDropdowns', (e) => {
+            if (e.detail.except !== container) {
+                closeDropdown();
+            }
+        });
+    }
+
+}
 function navigateTo(path) {
     window.app.navigateTo(path);
 }
