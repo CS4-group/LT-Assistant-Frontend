@@ -16,13 +16,13 @@ class App {
     init() {
         // Check authentication status from localStorage
         this.isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
-        
+
         // Set up initial routing
         this.handleRouting();
-        
+
         // Listen for back/forward navigation
         window.addEventListener('popstate', () => this.handleRouting());
-        
+
         // Set up form handlers
         this.setupEventListeners();
     }
@@ -234,12 +234,12 @@ class App {
                     text
                 })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
-            
+
             const result = await response.json();
             if (result.success) {
                 return result.data;
@@ -254,13 +254,13 @@ class App {
 
     handleRouting() {
         const path = window.location.hash.slice(1) || '/';
-        
+
         // Redirect to login if not authenticated
         if (!this.isAuthenticated && path !== '/login') {
             this.navigateTo('/login');
             return;
         }
-        
+
         // Redirect to home if authenticated and on login page
         if (this.isAuthenticated && path === '/login') {
             this.navigateTo('/');
@@ -288,7 +288,7 @@ class App {
     renderPage(pageName) {
         const app = document.getElementById('app');
         const template = document.getElementById(`${pageName}-template`);
-        
+
         if (!template) {
             console.error(`Template not found: ${pageName}-template`);
             return;
@@ -298,12 +298,12 @@ class App {
         app.innerHTML = '';
         const pageContent = template.content.cloneNode(true);
         app.appendChild(pageContent);
-        
+
         // Add fade-in animation
         app.firstElementChild?.classList.add('fade-in');
-        
+
         this.currentPage = pageName;
-        
+
         // Setup page-specific functionality
         this.setupPageHandlers(pageName);
     }
@@ -354,8 +354,9 @@ class App {
     setupRatingHandlers() {
         this.currentTab = 'courses';
         this.selectedItemId = null;
+        this.reviewFilterRating = 'all';
         this.searchQuery = '';
-        
+
         // Setup tab switching
         const tabButtons = document.querySelectorAll('.tab-button');
         tabButtons.forEach(button => {
@@ -384,11 +385,11 @@ class App {
     async loadInitialData() {
         // Show loading state
         const itemsList = document.getElementById('items-list');
-        const loadingText = this.currentTab === 'courses' ? 'Loading courses...' : 
-                           this.currentTab === 'clubs' ? 'Loading clubs...' : 
-                           'Loading teachers...';
+        const loadingText = this.currentTab === 'courses' ? 'Loading courses...' :
+            this.currentTab === 'clubs' ? 'Loading clubs...' :
+                'Loading teachers...';
         itemsList.innerHTML = `<div class="loading-state">${loadingText}</div>`;
-        
+
         if (this.currentTab === 'courses') {
             await this.fetchCourseNames();
         } else if (this.currentTab === 'clubs') {
@@ -396,7 +397,7 @@ class App {
         } else if (this.currentTab === 'teachers') {
             await this.fetchTeachers();
         }
-        
+
         this.updateItemsList();
     }
 
@@ -453,22 +454,22 @@ class App {
     renderGridView() {
         const plannerGrid = document.querySelector('.planner-grid');
         const yearSections = document.querySelectorAll('.year-section');
-        
+
         // Show all year sections
         yearSections.forEach(section => {
             section.style.display = 'block';
             section.classList.remove('expanded');
-            
+
             // Remove add course button if exists
             const addCourseBtn = section.querySelector('.add-course-btn-expanded');
             if (addCourseBtn) {
                 addCourseBtn.remove();
             }
         });
-        
+
         // Reset grid layout
         plannerGrid.style.gridTemplateColumns = '1fr 1fr';
-        
+
         // Remove back button if exists
         const backButton = document.querySelector('.back-to-grid-btn');
         if (backButton) {
@@ -479,13 +480,13 @@ class App {
     renderExpandedView(year) {
         const plannerGrid = document.querySelector('.planner-grid');
         const yearSections = document.querySelectorAll('.year-section');
-        
+
         // Hide all year sections except the selected one
         yearSections.forEach(section => {
             if (section.dataset.year === year) {
                 section.style.display = 'block';
                 section.classList.add('expanded');
-                
+
                 // Add "Add Course" button if it doesn't exist
                 if (!section.querySelector('.add-course-btn-expanded')) {
                     const addCourseBtn = document.createElement('button');
@@ -498,17 +499,17 @@ class App {
                 section.style.display = 'none';
             }
         });
-        
+
         // Change grid layout to single column
         plannerGrid.style.gridTemplateColumns = '1fr';
-        
+
         // Add back button if it doesn't exist
         if (!document.querySelector('.back-to-grid-btn')) {
             const backButton = document.createElement('button');
             backButton.className = 'btn back-to-grid-btn';
             backButton.textContent = '← Back to All Years';
             backButton.onclick = () => this.toggleYearExpansion(year);
-            
+
             const plannerHeader = document.querySelector('.planner-header .header-right');
             plannerHeader.insertBefore(backButton, plannerHeader.firstChild);
         }
@@ -562,17 +563,17 @@ class App {
         const courseLabel = document.createElement('label');
         courseLabel.className = 'form-label';
         courseLabel.textContent = 'Select Course';
-        
+
         const courseSelect = document.createElement('select');
         courseSelect.id = 'course-select';
         courseSelect.className = 'form-input';
-        
+
         // Add default option
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
         defaultOption.textContent = 'Choose a course...';
         courseSelect.appendChild(defaultOption);
-        
+
         // Add course options
         this.courseNames.forEach(course => {
             const option = document.createElement('option');
@@ -598,11 +599,11 @@ class App {
         courseSelect.addEventListener('change', async (e) => {
             const courseId = e.target.value;
             const descBox = document.getElementById('course-description');
-            
+
             if (courseId) {
                 descBox.innerHTML = '<p class="text-muted">Loading...</p>';
                 const courseDetails = await this.fetchCourseDetails(courseId);
-                
+
                 if (courseDetails) {
                     descBox.innerHTML = `<p>${courseDetails.description}</p>`;
                 } else {
@@ -620,24 +621,24 @@ class App {
         // Modal footer
         const modalFooter = document.createElement('div');
         modalFooter.className = 'modal-footer';
-        
+
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-outline';
         cancelBtn.textContent = 'Cancel';
         cancelBtn.onclick = () => modal.remove();
-        
+
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-primary';
         addBtn.textContent = 'Add Course';
         addBtn.onclick = () => {
             const courseId = courseSelect.value;
             const term = document.getElementById('term-select').value;
-            
+
             if (!courseId) {
                 this.showToast('Please select a course', 'error');
                 return;
             }
-            
+
             const selectedCourse = this.courseNames.find(c => String(c.id) === String(courseId));
             if (selectedCourse) {
                 const result = this.addCourseFromChatbot(selectedCourse.title, year, term);
@@ -667,7 +668,7 @@ class App {
     async switchTab(tabName) {
         this.currentTab = tabName;
         this.selectedItemId = null;
-        
+
         // Update tab buttons
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.classList.remove('active');
@@ -677,13 +678,13 @@ class App {
         // Update search placeholder
         const searchInput = document.getElementById('search-input');
         searchInput.placeholder = `Search for a ${tabName.slice(0, -1)}...`;
-        
+
         // Update sidebar title
         document.getElementById('sidebar-title').textContent = `${tabName.charAt(0).toUpperCase() + tabName.slice(1)} List`;
 
         // Clear main content
         document.getElementById('item-details').innerHTML = '<p>Select an item from the list to see reviews.</p>';
-        
+
         // Disable add review button until item is selected
         document.getElementById('header-add-review-btn').disabled = true;
 
@@ -694,7 +695,7 @@ class App {
     updateItemsList() {
         const itemsList = document.getElementById('items-list');
         let data = [];
-        
+
         // Use API data for all tabs
         if (this.currentTab === 'courses') {
             data = this.courseNames;
@@ -703,15 +704,15 @@ class App {
         } else if (this.currentTab === 'teachers') {
             data = this.teachers;
         }
-        
-        const filteredData = data.filter(item => 
+
+        const filteredData = data.filter(item =>
             !this.searchQuery || item.title.toLowerCase().includes(this.searchQuery)
         );
 
         // Handle empty data
         if (filteredData.length === 0) {
-            const emptyMessage = data.length === 0 
-                ? `No ${this.currentTab} available` 
+            const emptyMessage = data.length === 0
+                ? `No ${this.currentTab} available`
                 : 'No items found';
             itemsList.innerHTML = `<div class="loading-state">${emptyMessage}</div>`;
             this.selectedItemId = null;
@@ -753,22 +754,22 @@ class App {
     async selectItem(itemId) {
         this.selectedItemId = String(itemId); // Ensure consistent string storage
         this.updateItemsList(); // Refresh to show selection
-        
+
         // Show loading state for item details
         const loadingText = this.currentTab === 'courses' ? 'Loading course details...' :
-                           this.currentTab === 'clubs' ? 'Loading club details...' :
-                           'Loading teacher details...';
+            this.currentTab === 'clubs' ? 'Loading club details...' :
+                'Loading teacher details...';
         document.getElementById('item-details').innerHTML = `<div class="loading-state">${loadingText}</div>`;
-        
+
         await this.updateItemDetails();
-        
+
         // Enable add review button
         document.getElementById('header-add-review-btn').disabled = false;
     }
 
     async updateItemDetails() {
         const itemDetails = document.getElementById('item-details');
-        
+
         if (!this.selectedItemId) {
             itemDetails.innerHTML = '<p>Select an item from the list to see reviews.</p>';
             return;
@@ -776,7 +777,7 @@ class App {
 
         let item = null;
         let entityType = '';
-        
+
         // Fetch full details from API based on current tab
         if (this.currentTab === 'courses') {
             item = await this.fetchCourseDetails(this.selectedItemId);
@@ -802,8 +803,18 @@ class App {
         }
 
         // Fetch reviews from backend API
-        const reviews = await this.fetchReviews(entityType, this.selectedItemId);
-        
+        // Fetch reviews from backend API
+        let reviews = await this.fetchReviews(entityType, this.selectedItemId);
+
+        // Filter reviews based on current preference
+        if (this.reviewFilterRating !== 'all') {
+            const rating = parseInt(this.reviewFilterRating);
+            reviews = reviews.filter(review => review.rating === rating);
+        }
+
+        // Always show newest first within the filtered set
+        reviews.reverse();
+
         // Build additional info based on item type
         let additionalInfo = '';
         if (this.currentTab === 'clubs' && item.meetingDay) {
@@ -811,28 +822,43 @@ class App {
         } else if (this.currentTab === 'teachers' && item.courses && item.courses.length > 0) {
             additionalInfo = `<p><strong>Courses:</strong> ${item.courses.join(', ')}</p>`;
         }
-        
+
         itemDetails.innerHTML = `
             <h2>${item.title}</h2>
             <h3>Description</h3>
             <p>${item.description}</p>
             ${additionalInfo}
             <div class="reviews-section">
-                <h3>Reviews for ${item.title}</h3>
-                ${reviews.length > 0 ? 
-                    reviews.map(review => `
+                <div class="reviews-header">
+                    <h3>Reviews for ${item.title}</h3>
+                    <select onchange="window.app.handleFilterChange(this.value)" class="sort-select">
+                        <option value="all" ${this.reviewFilterRating === 'all' ? 'selected' : ''}>All Ratings</option>
+                        <option value="5" ${this.reviewFilterRating === '5' ? 'selected' : ''}>5 Stars</option>
+                        <option value="4" ${this.reviewFilterRating === '4' ? 'selected' : ''}>4 Stars</option>
+                        <option value="3" ${this.reviewFilterRating === '3' ? 'selected' : ''}>3 Stars</option>
+                        <option value="2" ${this.reviewFilterRating === '2' ? 'selected' : ''}>2 Stars</option>
+                        <option value="1" ${this.reviewFilterRating === '1' ? 'selected' : ''}>1 Star</option>
+                    </select>
+                </div>
+                ${reviews.length > 0 ?
+                reviews.map(review => `
                         <div class="review-card">
                             <div class="review-header">
                                 <strong>Anonymous User</strong>
-                                <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                                <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
                             </div>
                             ${review.text ? `<p>${review.text}</p>` : '<p><em>No comment provided</em></p>'}
                         </div>
                     `).join('') :
-                    '<p>No reviews yet. Be the first to add one!</p>'
-                }
+                (this.reviewFilterRating !== 'all' ? '<p>No reviews with this rating.</p>' : '<p>No reviews yet. Be the first to add one!</p>')
+            }
             </div>
         `;
+    }
+
+    handleFilterChange(rating) {
+        this.reviewFilterRating = rating;
+        this.updateItemDetails();
     }
 
     async openAddReviewModal() {
@@ -840,7 +866,7 @@ class App {
         let itemsList = [];
         let itemTypeSingular = '';
         let itemTypePlural = '';
-        
+
         if (this.currentTab === 'courses') {
             if (!this.courseNames || this.courseNames.length === 0) {
                 await this.fetchCourseNames();
@@ -895,17 +921,17 @@ class App {
         const itemLabel = document.createElement('label');
         itemLabel.className = 'form-label';
         itemLabel.textContent = `Select ${itemTypeSingular}`;
-        
+
         const itemSelect = document.createElement('select');
         itemSelect.id = 'review-item-select';
         itemSelect.className = 'form-input';
-        
+
         // Add default option
         const defaultOption = document.createElement('option');
         defaultOption.value = '';
         defaultOption.textContent = `Choose a ${itemTypePlural}...`;
         itemSelect.appendChild(defaultOption);
-        
+
         // Add item options
         itemsList.forEach(item => {
             const option = document.createElement('option');
@@ -952,16 +978,16 @@ class App {
         // Modal footer
         const modalFooter = document.createElement('div');
         modalFooter.className = 'modal-footer';
-        
+
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-outline';
         cancelBtn.textContent = 'Cancel';
         cancelBtn.onclick = () => modal.remove();
-        
+
         const submitBtn = document.createElement('button');
         submitBtn.className = 'btn btn-primary';
         submitBtn.textContent = 'Submit Review';
-        
+
         modalFooter.appendChild(cancelBtn);
         modalFooter.appendChild(submitBtn);
 
@@ -977,7 +1003,7 @@ class App {
         // Star rating logic
         let selectedRating = 0;
         const stars = modal.querySelectorAll('.star');
-        
+
         const updateStarDisplay = (rating) => {
             stars.forEach((s, i) => {
                 if (i < rating) {
@@ -989,12 +1015,12 @@ class App {
                 }
             });
         };
-        
+
         stars.forEach((star, index) => {
             star.addEventListener('mouseenter', () => {
                 updateStarDisplay(index + 1);
             });
-            
+
             star.addEventListener('click', () => {
                 selectedRating = parseInt(star.dataset.rating);
                 updateStarDisplay(selectedRating);
@@ -1008,18 +1034,18 @@ class App {
         // Bad word filtering on textarea
         const textarea = document.getElementById('review-description');
         const filterWarning = document.getElementById('filter-warning');
-        
+
         textarea.addEventListener('input', () => {
             const originalText = textarea.value;
             const filteredText = this.filterBadWords(originalText);
-            
+
             if (originalText !== filteredText) {
                 filterWarning.classList.remove('hidden');
                 setTimeout(() => {
                     filterWarning.classList.add('hidden');
                 }, 3000);
             }
-            
+
             textarea.value = filteredText;
         });
 
@@ -1027,22 +1053,22 @@ class App {
         submitBtn.onclick = async () => {
             const itemId = itemSelect.value;
             const description = textarea.value.trim();
-            
+
             if (!itemId) {
                 this.showToast(`Please select a ${itemTypePlural}`, 'error');
                 return;
             }
-            
+
             if (selectedRating === 0) {
                 this.showToast('Please select a rating', 'error');
                 return;
             }
-            
+
             if (!description) {
                 this.showToast('Please write a review', 'error');
                 return;
             }
-            
+
             // Determine entity type based on current tab
             let entityType = '';
             if (this.currentTab === 'courses') {
@@ -1052,20 +1078,20 @@ class App {
             } else if (this.currentTab === 'teachers') {
                 entityType = 'teacher';
             }
-            
+
             try {
                 // Disable submit button to prevent double submission
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Submitting...';
-                
+
                 // Create review via API
                 await this.createReview(entityType, parseInt(itemId), selectedRating, description);
-                
+
                 // If the review is for the currently selected item, refresh details
                 if (String(itemId) === String(this.selectedItemId)) {
                     await this.updateItemDetails();
                 }
-                
+
                 modal.remove();
                 this.showToast('Review added successfully!', 'success');
             } catch (error) {
@@ -1078,11 +1104,11 @@ class App {
 
     filterBadWords(text) {
         // List of bad words to filter (you can expand this list)
-       
-        
+
+
         let filteredText = text;
-        
-               
+
+
         return filteredText;
     }
 
@@ -1096,7 +1122,7 @@ class App {
 
             // Add user message to chat
             this.addChatMessage(message, 'user');
-            
+
             // Clear input
             chatbotInput.value = '';
 
@@ -1116,14 +1142,14 @@ class App {
         const messagesContainer = document.getElementById('chatbot-messages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}-message`;
-        
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
         contentDiv.innerHTML = `<p>${message}</p>`;
-        
+
         messageDiv.appendChild(contentDiv);
         messagesContainer.appendChild(messageDiv);
-        
+
         // Scroll to bottom
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
@@ -1131,10 +1157,10 @@ class App {
     processChatbotMessage(message) {
         // Parse the message to extract course information
         const courseInfo = this.parseCourseinfoFromMessage(message);
-        
+
         if (courseInfo) {
             const { courseName, year, term } = courseInfo;
-            
+
             // Check if we have all required information
             if (!courseName) {
                 this.addChatMessage("I couldn't identify a course name in your message. Could you please specify which course you'd like to add?", 'bot');
@@ -1148,7 +1174,7 @@ class App {
 
             // Try to add the course
             const result = this.addCourseFromChatbot(courseName, year, term);
-            
+
             if (result.success) {
                 this.addChatMessage(`Great! I've added "${courseName}" to your ${year} ${term} schedule. 📚`, 'bot');
             } else {
@@ -1166,10 +1192,10 @@ class App {
 
     parseCourseinfoFromMessage(message) {
         const lowerMessage = message.toLowerCase();
-        
+
         // Extract course name patterns
         let courseName = null;
-        
+
         // Pattern: "add [course] to [year] [term]"
         let match = lowerMessage.match(/(?:add|put)\s+([^to]+?)\s+to\s+(\w+)\s+(\w+)/i);
         if (match) {
@@ -1257,7 +1283,7 @@ class App {
         this.coursePlanner[year][term].push(newCourse);
         this.savePlannerData();
         this.renderPlannerGrid();
-        
+
         this.showToast(`Added ${courseName} to ${year} ${term}`, 'success');
         return { success: true };
     }
@@ -1294,12 +1320,12 @@ class App {
         const formData = new FormData(form);
         const email = formData.get('email');
         const password = formData.get('password');
-        
+
         // Show loading state
         const submitBtn = form.querySelector('button[type="submit"]');
         const btnText = submitBtn.querySelector('.btn-text');
         const btnLoading = submitBtn.querySelector('.btn-loading');
-        
+
         btnText.classList.add('hidden');
         btnLoading.classList.remove('hidden');
         submitBtn.disabled = true;
@@ -1341,7 +1367,7 @@ class App {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
-        
+
         // Add toast styles if not already in CSS
         if (!document.querySelector('#toast-styles')) {
             const style = document.createElement('style');
@@ -1368,9 +1394,9 @@ class App {
             `;
             document.head.appendChild(style);
         }
-        
+
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.style.animation = 'slideIn 0.3s ease-out reverse';
             setTimeout(() => toast.remove(), 300);
