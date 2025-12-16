@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LT Assistant</title>
     <link rel="stylesheet" href="styles.css">
-  </head>
-  <body>
+    <link rel="stylesheet" href="drag-styles.css">
+</head>
+
+<body>
     <div id="app">
     </div>
 
@@ -23,36 +26,38 @@
                     <img src="sift.png" alt="LT" class="logo">
                     <h1 class="app-title">LT Assistant</h1>
                     <p class="subtitle">Sign in to your account</p>
-                </div> 
+                </div>
 
-            <div class="login-wrapper">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Login</h2>
-                        <p class="card-description">Enter your credentials to access your dashboard</p>
-                    </div>
-                    <div class="card-content">
-                        <form id="login-form" class="form">
-                            <div class="form-group">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" id="email" name="email" class="form-input" placeholder="Enter your email" required>
+                <div class="login-wrapper">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Login</h2>
+                            <p class="card-description">Enter your credentials to access your dashboard</p>
+                        </div>
+                        <div class="card-content">
+                            <form id="login-form" class="form">
+                                <div class="form-group">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" id="email" name="email" class="form-input"
+                                        placeholder="Enter your email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" id="password" name="password" class="form-input"
+                                        placeholder="Enter your password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full">
+                                    <span class="btn-text">Sign in</span>
+                                    <span class="btn-loading hidden">Signing in...</span>
+                                </button>
+                            </form>
+                            <div class="demo-notice">
+                                <strong>Demo Mode:</strong> Enter any email and password to login!
                             </div>
-                            <div class="form-group">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-full">
-                                <span class="btn-text">Sign in</span>
-                                <span class="btn-loading hidden">Signing in...</span>
-                            </button>
-                        </form>
-                        <div class="demo-notice">
-                            <strong>Demo Mode:</strong> Enter any email and password to login!
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </template>
 
     <!-- Home page-->
@@ -62,7 +67,7 @@
                 <img src="title-bg.jpg" alt="" class="bg-image">
                 <div class="bg-overlay"></div>
             </div>
-            
+
             <div class="home-header">
                 <img src="sift.png" alt="LT" class="logo">
                 <h1 class="app-title-large">LT Assistant</h1>
@@ -221,21 +226,26 @@
                     <div class="chatbot-container">
                         <div id="chatbot-messages" class="chatbot-messages">
                             <div class="message bot-message">
+                                <div class="message-avatar">🤖</div>
                                 <div class="message-content">
-                                    <p>Hi! I'm your AI course planning assistant. Tell me what courses you'd like to add to your schedule, and I'll help you place them in the right year and term.</p>
-                                    <p><strong>Example:</strong> "Add AP Biology to Junior Fall" or "I want to take Spanish 2 in Sophomore Spring"</p>
+                                    <p>Hi! I'm your AI course planning assistant. Tell me what courses you'd like to add
+                                        to your schedule, and I'll help you place them in the right year and term.</p>
+                                    <p><strong>Example:</strong> "Add AP Biology to Junior Fall" or "I want to take
+                                        Spanish 2 in Sophomore Spring"</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="chatbot-input-area">
-                            <div class="input-container">
-                                <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Type your course request here..." />
-                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send</button>
-                            </div>
+                    </div>
+                    <div class="chatbot-input-area">
+                        <div class="input-container">
+                            <input type="text" id="chatbot-input" class="chatbot-input"
+                                placeholder="Type your course request here..." />
+                            <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send</button>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </template>
 
@@ -246,5 +256,6 @@
     </template>
 
     <script src="main.js"></script>
-  </body>
+</body>
+
 </html>

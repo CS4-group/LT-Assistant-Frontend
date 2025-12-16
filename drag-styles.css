@@ -1,0 +1,27 @@
+/* Drag and Drop Styles */
+.course-item[draggable="true"] {
+    cursor: grab;
+}
+
+.course-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.course-item.dragging {
+    opacity: 0.5;
+    background-color: var(--primary-hover);
+    transform: scale(0.95);
+    box-shadow: var(--shadow-lg);
+}
+
+.course-slot.drag-over {
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 2px dashed #10b981;
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+
+.year-section.expanded .course-slot.drag-over {
+    background-color: rgba(16, 185, 129, 0.15);
+    border: 2px dashed #10b981;
+}

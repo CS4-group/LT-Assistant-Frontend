@@ -439,6 +439,91 @@ class App {
         });
     }
 
+    setupDragAndDrop() {
+        const app = this;
+        // Course items are dynamic, so we might need event delegation or re-attaching listeners
+        // For simplicity with this current architecture, listeners are attached in renderPlannerGrid
+    }
+
+    handleDragStart(e, courseId, sourceYear, sourceTerm) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+            courseId,
+            sourceYear,
+            sourceTerm
+        }));
+        e.target.classList.add('dragging');
+    }
+
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+        document.querySelectorAll('.course-slot.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    }
+
+    handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault(); // Necessary. Allows us to drop.
+        }
+        e.dataTransfer.dropEffect = 'move';
+        e.currentTarget.classList.add('drag-over');
+        return false;
+    }
+
+    handleDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over');
+    }
+
+    handleDrop(e, targetYear, targetTerm) {
+        if (e.stopPropagation) {
+            e.stopPropagation(); // Stops some browsers from redirecting.
+        }
+        e.currentTarget.classList.remove('drag-over');
+
+        const dataStr = e.dataTransfer.getData('text/plain');
+        if (!dataStr) return false;
+
+        const data = JSON.parse(dataStr);
+        const { courseId, sourceYear, sourceTerm } = data;
+
+        // Prevent dropping in the exact same spot effectively doing nothing
+        if (sourceYear === targetYear && sourceTerm === targetTerm) {
+            return false;
+        }
+
+        // Logic to move the course
+        this.moveCourse(courseId, sourceYear, sourceTerm, targetYear, targetTerm);
+        return false;
+    }
+
+    moveCourse(courseId, sourceYear, sourceTerm, targetYear, targetTerm) {
+        // Find the course
+        const sourceCourses = this.coursePlanner[sourceYear][sourceTerm];
+        const courseIndex = sourceCourses.findIndex(c => c.id === courseId);
+
+        if (courseIndex === -1) return;
+
+        const course = sourceCourses[courseIndex];
+
+        // Check limits
+        if (this.coursePlanner[targetYear][targetTerm].length >= 8) {
+            this.showToast(`Cannot move ${course.name}. ${targetYear} ${targetTerm} is full.`, 'error');
+            return;
+        }
+
+        // Remove from source
+        this.coursePlanner[sourceYear][sourceTerm].splice(courseIndex, 1);
+
+        // Add to target
+        this.coursePlanner[targetYear][targetTerm].push(course);
+
+        // Save and Render
+        this.savePlannerData();
+        this.renderPlannerGrid();
+        this.showToast(`Moved ${course.name} to ${targetYear} ${targetTerm}`, 'success');
+    }
+
     toggleYearExpansion(year) {
         if (this.expandedYear === year) {
             // Collapse back to grid view
@@ -1126,10 +1211,15 @@ class App {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}-message`;
 
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        avatarDiv.textContent = sender === 'bot' ? '🤖' : '👤';
+
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = `<p>${message}</p>`;
+        contentDiv.innerHTML = message; // Use innerHTML directly as message might contain HTML tags
 
+        messageDiv.appendChild(avatarDiv);
         messageDiv.appendChild(contentDiv);
         messagesContainer.appendChild(messageDiv);
 
@@ -1137,40 +1227,153 @@ class App {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    processChatbotMessage(message) {
-        // Parse the message to extract course information
-        const courseInfo = this.parseCourseinfoFromMessage(message);
+    showTypingIndicator() {
+        const messagesContainer = document.getElementById('chatbot-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message bot-message typing-message';
+        messageDiv.id = 'typing-indicator-msg';
 
-        if (courseInfo) {
-            const { courseName, year, term } = courseInfo;
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'message-avatar';
+        avatarDiv.textContent = '🤖';
 
-            // Check if we have all required information
-            if (!courseName) {
-                this.addChatMessage("I couldn't identify a course name in your message. Could you please specify which course you'd like to add?", 'bot');
-                return;
-            }
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = `
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        `;
 
-            if (!year || !term) {
-                this.addChatMessage(`I understand you want to add "${courseName}", but I need to know which year and term. Please specify something like "Freshman Fall" or "Senior Spring".`, 'bot');
-                return;
-            }
+        messageDiv.appendChild(avatarDiv);
+        messageDiv.appendChild(contentDiv);
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
-            // Try to add the course
-            const result = this.addCourseFromChatbot(courseName, year, term);
-
-            if (result.success) {
-                this.addChatMessage(`Great! I've added "${courseName}" to your ${year} ${term} schedule. 📚`, 'bot');
-            } else {
-                this.addChatMessage(result.message, 'bot');
-            }
-        } else {
-            // Provide helpful suggestions
-            this.addChatMessage(`I'd be happy to help you add courses! Try saying something like:
-            <br><br>• "Add AP Biology to Junior Fall"
-            <br>• "I want to take Spanish 2 in Sophomore Spring"  
-            <br>• "Put Calculus in Senior Fall"
-            <br><br>What course would you like to add to your schedule?`, 'bot');
+    hideTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator-msg');
+        if (indicator) {
+            indicator.remove();
         }
+    }
+
+    processChatbotMessage(message) {
+        // Show typing indicator
+        this.showTypingIndicator();
+
+        // Simulate thinking time (random between 1s and 2s)
+        const delay = Math.random() * 1000 + 1000;
+
+        setTimeout(async () => {
+            this.hideTypingIndicator();
+
+            // Ensure courses are loaded if not already
+            if (this.courseNames.length === 0) {
+                await this.fetchCourseNames();
+            }
+
+            // Parse the message to extract course information
+            const courseInfo = this.parseCourseinfoFromMessage(message);
+
+            if (courseInfo.courseName) {
+                let { courseName, year, term } = courseInfo;
+
+                // Clean up any "in" prefix and quotes if captured
+                courseName = courseName.replace(/^in\s+/i, '').replace(/['"]/g, '').trim();
+
+                // Cross-reference with backend list
+                let matchedCourse = null;
+
+                // Helper to try matching
+                const findMatch = (input) => {
+                    const cleanInput = input.toLowerCase();
+                    // 1. Exact match
+                    let match = this.courseNames.find(c => c.title.toLowerCase() === cleanInput);
+                    // 2. Contains match
+                    if (!match) match = this.courseNames.find(c => c.title.toLowerCase().includes(cleanInput));
+                    // 3. Reverse contains match
+                    if (!match) match = this.courseNames.find(c => cleanInput.includes(c.title.toLowerCase()));
+                    return match;
+                };
+
+                // Try original input
+                matchedCourse = findMatch(courseName);
+
+                // If no match, try Roman numeral substitution
+                if (!matchedCourse) {
+                    // Regex for word boundaries to check for numbers 1-5
+                    const arabicToRoman = (text) => {
+                        return text.replace(/\b1\b/g, 'I')
+                            .replace(/\b2\b/g, 'II')
+                            .replace(/\b3\b/g, 'III')
+                            .replace(/\b4\b/g, 'IV')
+                            .replace(/\b5\b/g, 'V');
+                    };
+
+                    const romanToArabic = (text) => {
+                        // Be careful with 'I' as pronoun, but since this is extracted course name, it's likely part of title
+                        return text.replace(/\bI\b/g, '1')
+                            .replace(/\bII\b/g, '2')
+                            .replace(/\bIII\b/g, '3')
+                            .replace(/\bIV\b/g, '4')
+                            .replace(/\bV\b/g, '5');
+                    };
+
+                    const variant1 = arabicToRoman(courseName); // e.g. "Spanish 2" -> "Spanish II"
+                    if (variant1 !== courseName) matchedCourse = findMatch(variant1);
+
+                    if (!matchedCourse) {
+                        const variant2 = romanToArabic(courseName); // e.g. "Calculus II" -> "Calculus 2"
+                        if (variant2 !== courseName) matchedCourse = findMatch(variant2);
+                    }
+                }
+
+                if (matchedCourse) {
+                    courseName = matchedCourse.title; // Use the official title
+                } else {
+                    // Start fuzzy search logic if exact/contains failed
+                    const simpleInput = courseName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    matchedCourse = this.courseNames.find(c => {
+                        const simpleTitle = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return simpleTitle.includes(simpleInput) || simpleInput.includes(simpleTitle);
+                    });
+
+                    if (matchedCourse) {
+                        courseName = matchedCourse.title;
+                    }
+                }
+
+                // Check if we have all required information
+                if (!year || !term) {
+                    this.addChatMessage(`I understand you want to add "<strong>${courseName}</strong>", but I need to know which year and term. Please specify something like "Freshman Fall" or "Senior Spring".`, 'bot');
+                    return;
+                }
+
+                // Try to add the course
+                const result = this.addCourseFromChatbot(courseName, year, term);
+
+                if (result.success) {
+                    this.addChatMessage(`Great! I've added "<strong>${courseName}</strong>" to your ${year} ${term} schedule. 📚`, 'bot');
+                } else {
+                    this.addChatMessage(result.message, 'bot');
+                }
+            } else {
+                // Check if it's a greeting or general question
+                const lowerMsg = message.toLowerCase();
+                if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey')) {
+                    this.addChatMessage(`Hello! I'm here to help you plan your courses. What would you like to add?`, 'bot');
+                } else {
+                    // Provide helpful suggestions
+                    this.addChatMessage(`I'm not sure I understood that. To add a course, try saying something like:
+                    <br><br>• "Add AP Biology to Junior Fall"
+                    <br>• "I want to take Spanish 2 in Sophomore Spring"  
+                    <br>• "Put Calculus in Senior Fall"`, 'bot');
+                }
+            }
+        }, delay);
     }
 
     parseCourseinfoFromMessage(message) {
@@ -1272,16 +1475,35 @@ class App {
     }
 
     renderPlannerGrid() {
+        const app = this; // Capture 'this' for event listeners
+
         Object.entries(this.coursePlanner).forEach(([year, yearData]) => {
             Object.entries(yearData).forEach(([term, courses]) => {
                 const slot = document.querySelector(`[data-year="${year}"][data-term="${term}"]`);
                 if (slot) {
+                    // Update slot content
                     slot.innerHTML = courses.map(course => `
-                        <div class="course-item">
+                        <div class="course-item" draggable="true" id="${course.id}" 
+                             data-year="${year}" data-term="${term}">
                             <span class="course-name">${course.name}</span>
                             <button class="remove-course" onclick="window.app.removeCourse('${course.id}', '${year}', '${term}')">×</button>
                         </div>
                     `).join('');
+
+                    // Add Drop Listeners to Slot
+                    slot.addEventListener('dragover', (e) => app.handleDragOver(e));
+                    slot.addEventListener('dragleave', (e) => app.handleDragLeave(e));
+                    slot.addEventListener('drop', (e) => app.handleDrop(e, year, term));
+
+                    // Add Drag Listeners to Items (after they are in DOM)
+                    slot.querySelectorAll('.course-item').forEach(item => {
+                        item.addEventListener('dragstart', (e) => {
+                            app.handleDragStart(e, item.id, year, term);
+                        });
+                        item.addEventListener('dragend', (e) => {
+                            app.handleDragEnd(e);
+                        });
+                    });
                 }
             });
         });
