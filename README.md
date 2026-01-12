@@ -1,4 +1,4 @@
 # LT Assistant Frontend
 
-Mrs. Preesha packed up this project
+Repo for the frontend of our CS4 project
 
