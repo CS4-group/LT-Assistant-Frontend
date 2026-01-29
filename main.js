@@ -1260,174 +1260,56 @@ class App {
         }
     }
 
-    processChatbotMessage(message) {
+    async processChatbotMessage(message) {
         // Show typing indicator
         this.showTypingIndicator();
 
-        // Simulate thinking time (random between 1s and 2s)
-        const delay = Math.random() * 1000 + 1000;
+        // Ensure courses are loaded if not already
+        if (this.courseNames.length === 0) {
+            await this.fetchCourseNames();
+        }
 
-        setTimeout(async () => {
+        try {
+            // Call backend Gemini API endpoint
+            const response = await fetch(`${this.apiBaseUrl}/api/chatbot`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    availableCourses: this.courseNames
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
             this.hideTypingIndicator();
 
-            // Ensure courses are loaded if not already
-            if (this.courseNames.length === 0) {
-                await this.fetchCourseNames();
-            }
-
-            // Parse the message to extract course information
-            const courseInfo = this.parseCourseinfoFromMessage(message);
-
-            if (courseInfo.courseName) {
-                let { courseName, year, term } = courseInfo;
-
-                // Clean up any "in" prefix and quotes if captured
-                courseName = courseName.replace(/^in\s+/i, '').replace(/['"]/g, '').trim();
-
-                // Cross-reference with backend list
-                let matchedCourse = null;
-
-                // Helper to try matching
-                const findMatch = (input) => {
-                    const cleanInput = input.toLowerCase();
-                    // 1. Exact match
-                    let match = this.courseNames.find(c => c.title.toLowerCase() === cleanInput);
-                    // 2. Contains match
-                    if (!match) match = this.courseNames.find(c => c.title.toLowerCase().includes(cleanInput));
-                    // 3. Reverse contains match
-                    if (!match) match = this.courseNames.find(c => cleanInput.includes(c.title.toLowerCase()));
-                    return match;
-                };
-
-                // Try original input
-                matchedCourse = findMatch(courseName);
-
-                // If no match, try Roman numeral substitution
-                if (!matchedCourse) {
-                    // Regex for word boundaries to check for numbers 1-5
-                    const arabicToRoman = (text) => {
-                        return text.replace(/\b1\b/g, 'I')
-                            .replace(/\b2\b/g, 'II')
-                            .replace(/\b3\b/g, 'III')
-                            .replace(/\b4\b/g, 'IV')
-                            .replace(/\b5\b/g, 'V');
-                    };
-
-                    const romanToArabic = (text) => {
-                        // Be careful with 'I' as pronoun, but since this is extracted course name, it's likely part of title
-                        return text.replace(/\bI\b/g, '1')
-                            .replace(/\bII\b/g, '2')
-                            .replace(/\bIII\b/g, '3')
-                            .replace(/\bIV\b/g, '4')
-                            .replace(/\bV\b/g, '5');
-                    };
-
-                    const variant1 = arabicToRoman(courseName); // e.g. "Spanish 2" -> "Spanish II"
-                    if (variant1 !== courseName) matchedCourse = findMatch(variant1);
-
-                    if (!matchedCourse) {
-                        const variant2 = romanToArabic(courseName); // e.g. "Calculus II" -> "Calculus 2"
-                        if (variant2 !== courseName) matchedCourse = findMatch(variant2);
-                    }
-                }
-
-                if (matchedCourse) {
-                    courseName = matchedCourse.title; // Use the official title
-                } else {
-                    // Start fuzzy search logic if exact/contains failed
-                    const simpleInput = courseName.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    matchedCourse = this.courseNames.find(c => {
-                        const simpleTitle = c.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        return simpleTitle.includes(simpleInput) || simpleInput.includes(simpleTitle);
-                    });
-
-                    if (matchedCourse) {
-                        courseName = matchedCourse.title;
-                    }
-                }
-
-                // Check if we have all required information
-                if (!year || !term) {
-                    this.addChatMessage(`I understand you want to add "<strong>${courseName}</strong>", but I need to know which year and term. Please specify something like "Freshman Fall" or "Senior Spring".`, 'bot');
-                    return;
-                }
-
-                // Try to add the course
-                const result = this.addCourseFromChatbot(courseName, year, term);
-
-                if (result.success) {
-                    this.addChatMessage(`Great! I've added "<strong>${courseName}</strong>" to your ${year} ${term} schedule. 📚`, 'bot');
-                } else {
-                    this.addChatMessage(result.message, 'bot');
-                }
+            // Handle the new response format: { success, data: { response }, message }
+            if (result.success && result.data && result.data.response) {
+                // Display the AI counselor's natural response
+                this.addChatMessage(result.data.response, 'bot');
+            } else if (result.data && typeof result.data === 'string') {
+                // Handle if data is a direct string
+                this.addChatMessage(result.data, 'bot');
+            } else if (result.response) {
+                // Fallback for old format
+                this.addChatMessage(result.response, 'bot');
             } else {
-                // Check if it's a greeting or general question
-                const lowerMsg = message.toLowerCase();
-                if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey')) {
-                    this.addChatMessage(`Hello! I'm here to help you plan your courses. What would you like to add?`, 'bot');
-                } else {
-                    // Provide helpful suggestions
-                    this.addChatMessage(`I'm not sure I understood that. To add a course, try saying something like:
-                    <br><br>• "Add AP Biology to Junior Fall"
-                    <br>• "I want to take Spanish 2 in Sophomore Spring"  
-                    <br>• "Put Calculus in Senior Fall"`, 'bot');
-                }
+                // Display generic message if response format is unexpected
+                this.addChatMessage('I received your message. How else can I help you with your course planning?', 'bot');
             }
-        }, delay);
-    }
-
-    parseCourseinfoFromMessage(message) {
-        const lowerMessage = message.toLowerCase();
-
-        // Extract course name patterns
-        let courseName = null;
-
-        // Pattern: "add [course] to [year] [term]"
-        let match = lowerMessage.match(/(?:add|put)\s+([^to]+?)\s+to\s+(\w+)\s+(\w+)/i);
-        if (match) {
-            courseName = match[1].trim();
-            const year = this.capitalizeFirst(match[2]);
-            const term = this.capitalizeFirst(match[3]);
-            return { courseName, year, term };
+        } catch (error) {
+            this.hideTypingIndicator();
+            console.error('Chatbot API error:', error);
+            
+            // User-friendly error message
+            this.addChatMessage('⚠️ Sorry, I encountered an error connecting to the AI assistant. Please try again in a moment.', 'bot');
         }
-
-        // Pattern: "I want to take [course] in [year] [term]"
-        match = lowerMessage.match(/(?:i want to take|take)\s+([^in]+?)\s+in\s+(\w+)\s+(\w+)/i);
-        if (match) {
-            courseName = match[1].trim();
-            const year = this.capitalizeFirst(match[2]);
-            const term = this.capitalizeFirst(match[3]);
-            return { courseName, year, term };
-        }
-
-        // Pattern: "[course] [year] [term]" (simple format)
-        match = lowerMessage.match(/^([^]+?)\s+(freshman|sophomore|junior|senior)\s+(fall|spring)$/i);
-        if (match) {
-            courseName = match[1].trim();
-            const year = this.capitalizeFirst(match[2]);
-            const term = this.capitalizeFirst(match[3]);
-            return { courseName, year, term };
-        }
-
-        // Extract just course name if mentioned but no year/term
-        const addPatterns = [
-            /(?:add|put|take)\s+([^]+?)(?:\s+(?:to|in)\s+|$)/i,
-            /^([^]+?)(?:\s+(?:course|class))?$/i
-        ];
-
-        for (const pattern of addPatterns) {
-            match = lowerMessage.match(pattern);
-            if (match) {
-                courseName = match[1].trim();
-                break;
-            }
-        }
-
-        return { courseName, year: null, term: null };
-    }
-
-    capitalizeFirst(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     }
 
     addCourseFromChatbot(courseName, year, term) {
