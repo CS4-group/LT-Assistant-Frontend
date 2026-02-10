@@ -100,27 +100,27 @@
                 <img src="title-bg.jpg" alt="" class="bg-image">
                 <div class="bg-overlay"></div>
             </div>
-            <div class="planner-header">
-                <div class="header-left">
-                    <div>
+
+            <div class="rating-top-bar">
+                <div class="rating-top-row">
+                    <div class="header-left">
                         <h1>Rating System</h1>
-                        <p>Rate and review courses, clubs, and teachers</p>
+                    </div>
+                    <div class="header-right">
+                        <button class="btn btn-floating" onclick="navigateTo('/')">← Back</button>
+                        <button class="btn btn-floating btn-floating-primary" id="header-add-review-btn" disabled>+ Add Review</button>
                     </div>
                 </div>
-                <div class="header-right">
-                    <button class="btn btn-outline" onclick="navigateTo('/')">Back</button>
-                    <button class="btn btn-outline" id="header-add-review-btn" disabled>Add Review</button>
+                <div class="rating-controls-row">
+                    <div class="tab-container">
+                        <button class="tab-button active" data-tab="courses">Courses</button>
+                        <button class="tab-button" data-tab="clubs">Clubs</button>
+                        <button class="tab-button" data-tab="teachers">Teachers</button>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="form-input" placeholder="Search for a course...">
+                    </div>
                 </div>
-            </div>
-
-            <div class="tab-container">
-                <button class="tab-button active" data-tab="courses">Courses</button>
-                <button class="tab-button" data-tab="clubs">Clubs</button>
-                <button class="tab-button" data-tab="teachers">Teachers</button>
-            </div>
-
-            <div class="search-container">
-                <input type="text" id="search-input" class="form-input" placeholder="Search for a course...">
             </div>
 
             <div class="rating-content">

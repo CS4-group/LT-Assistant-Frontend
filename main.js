@@ -506,6 +506,31 @@ class App {
 
         const course = sourceCourses[courseIndex];
 
+        // Check if this is a full year course - prevent moving
+        if (course.isFullYear) {
+            this.showToast(`Cannot move ${course.name}. This is a full year course and must be removed from both Fall and Spring terms.`, 'error');
+            return;
+        }
+
+        // Validate grade level against target year
+        if (course.grade) {
+            const gradeNum = parseInt(course.grade);
+            const yearGradeMap = {
+                'Freshman': 9,
+                'Sophomore': 10,
+                'Junior': 11,
+                'Senior': 12
+            };
+            
+            const targetGrade = yearGradeMap[targetYear];
+            if (gradeNum && gradeNum !== targetGrade) {
+                const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
+                const correctYear = gradeYearMap[gradeNum] || `Grade ${gradeNum}`;
+                this.showToast(`Cannot move ${course.name}. This course is for grade ${gradeNum} (${correctYear} year).`, 'error');
+                return;
+            }
+        }
+
         // Check limits
         if (this.coursePlanner[targetYear][targetTerm].length >= 8) {
             this.showToast(`Cannot move ${course.name}. ${targetYear} ${targetTerm} is full.`, 'error');
@@ -639,6 +664,7 @@ class App {
             <select id="term-select" class="form-input">
                 <option value="Fall">Fall</option>
                 <option value="Spring">Spring</option>
+                <option value="Full Year">Full Year</option>
             </select>
         `;
 
@@ -659,6 +685,16 @@ class App {
         const dropdownContainer = document.createElement('div');
         courseSection.appendChild(dropdownContainer);
 
+        // Course info display
+        const infoSection = document.createElement('div');
+        infoSection.className = 'form-group';
+        infoSection.innerHTML = `
+            <label class="form-label">Course Information</label>
+            <div id="course-info" class="course-description-box">
+                <p class="text-muted">Select a course to view its information</p>
+            </div>
+        `;
+
         // Course description display
         const descriptionSection = document.createElement('div');
         descriptionSection.className = 'form-group';
@@ -669,27 +705,44 @@ class App {
             </div>
         `;
 
+        let selectedCourseLength = '';
+        let selectedCourseGrade = '';
+
         // Initialize custom dropdown
         this.createSearchableDropdown(dropdownContainer, courseItems, 'Search for a course...', async (selectedValue) => {
             selectedCourseId = selectedValue;
             const descBox = document.getElementById('course-description');
+            const infoBox = document.getElementById('course-info');
 
             if (selectedValue) {
                 descBox.innerHTML = '<p class="text-muted">Loading...</p>';
+                infoBox.innerHTML = '<p class="text-muted">Loading...</p>';
                 const courseDetails = await this.fetchCourseDetails(selectedValue);
 
                 if (courseDetails) {
                     descBox.innerHTML = `<p>${courseDetails.description}</p>`;
+                    selectedCourseLength = courseDetails.length || 'SM';
+                    selectedCourseGrade = courseDetails.grade || '';
+                    
+                    const lengthText = selectedCourseLength === 'YR' ? 'Full Year' : 'Semester';
+                    const gradeText = selectedCourseGrade ? `Grade: ${selectedCourseGrade}` : '';
+                    
+                    infoBox.innerHTML = `<p><strong>${lengthText}</strong>${gradeText ? ` | <strong>${gradeText}</strong>` : ''}</p>`;
                 } else {
                     descBox.innerHTML = '<p class="text-muted">Failed to load description</p>';
+                    infoBox.innerHTML = '<p class="text-muted">Failed to load information</p>';
                 }
             } else {
                 descBox.innerHTML = '<p class="text-muted">Select a course to view its description</p>';
+                infoBox.innerHTML = '<p class="text-muted">Select a course to view its information</p>';
+                selectedCourseLength = '';
+                selectedCourseGrade = '';
             }
         });
 
         modalBody.appendChild(termSection);
         modalBody.appendChild(courseSection);
+        modalBody.appendChild(infoSection);
         modalBody.appendChild(descriptionSection);
 
         // Modal footer
@@ -712,9 +765,39 @@ class App {
                 return;
             }
 
+            // Validate course length against selected term
+            if (selectedCourseLength === 'YR' && (term === 'Fall' || term === 'Spring')) {
+                this.showToast('This is a full year course and cannot be added to a single semester. Please select "Full Year".', 'error');
+                return;
+            }
+
+            if (selectedCourseLength === 'SM' && term === 'Full Year') {
+                this.showToast('This is a semester course and cannot be added as a full year course. Please select Fall or Spring.', 'error');
+                return;
+            }
+
+            // Validate grade level against year
+            if (selectedCourseGrade) {
+                const gradeNum = parseInt(selectedCourseGrade);
+                const yearGradeMap = {
+                    'Freshman': 9,
+                    'Sophomore': 10,
+                    'Junior': 11,
+                    'Senior': 12
+                };
+                
+                const expectedGrade = yearGradeMap[year];
+                if (gradeNum && gradeNum !== expectedGrade) {
+                    const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
+                    const correctYear = gradeYearMap[gradeNum] || `Grade ${gradeNum}`;
+                    this.showToast(`This course is for grade ${gradeNum} (${correctYear} year). Please add it to the correct year.`, 'error');
+                    return;
+                }
+            }
+
             const selectedCourse = this.courseNames.find(c => String(c.id) === String(selectedCourseId));
             if (selectedCourse) {
-                const result = this.addCourseFromChatbot(selectedCourse.title, year, term);
+                const result = this.addCourseFromChatbot(selectedCourse.title, year, term, selectedCourseLength, selectedCourseGrade);
                 if (result.success) {
                     modal.remove();
                 } else {
@@ -750,13 +833,23 @@ class App {
 
         // Update search placeholder
         const searchInput = document.getElementById('search-input');
+        searchInput.value = '';
+        this.searchQuery = '';
         searchInput.placeholder = `Search for a ${tabName.slice(0, -1)}...`;
 
         // Update sidebar title
         document.getElementById('sidebar-title').textContent = `${tabName.charAt(0).toUpperCase() + tabName.slice(1)} List`;
 
-        // Clear main content
-        document.getElementById('item-details').innerHTML = '<p>Select an item from the list to see reviews.</p>';
+        // Clear main content with fade
+        const details = document.getElementById('item-details');
+        details.style.opacity = '0';
+        details.style.transform = 'translateY(12px)';
+        setTimeout(() => {
+            details.innerHTML = '<p>Select an item from the list to see reviews.</p>';
+            details.style.opacity = '1';
+            details.style.transform = 'translateY(0)';
+            details.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        }, 150);
 
         // Disable add review button until item is selected
         document.getElementById('header-add-review-btn').disabled = true;
@@ -804,10 +897,12 @@ class App {
             }
         };
 
-        itemsList.innerHTML = filteredData.map(item => {
+        itemsList.innerHTML = filteredData.map((item, index) => {
             const isSelected = String(this.selectedItemId) === String(item.id);
+            const delay = Math.min(index * 0.04, 0.8); // stagger up to 800ms
             return `
                 <div class="item-card ${isSelected ? 'selected' : ''}" 
+                     style="animation-delay: ${delay}s"
                      onclick="window.app.selectItem('${item.id}')">
                     <div class="item-title">${item.title}</div>
                     <div class="item-description">${getItemDescription(item)}</div>
@@ -914,8 +1009,8 @@ class App {
                     </select>
                 </div>
                 ${reviews.length > 0 ?
-                reviews.map(review => `
-                        <div class="review-card">
+                reviews.map((review, idx) => `
+                        <div class="review-card" style="animation-delay: ${Math.min(idx * 0.06, 0.6)}s">
                             <div class="review-header">
                                 <strong>Anonymous User</strong>
                                 <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
@@ -1312,17 +1407,17 @@ class App {
         }
     }
 
-    addCourseFromChatbot(courseName, year, term) {
+    addCourseFromChatbot(courseName, year, term, courseLength = 'SM', courseGrade = '') {
         // Validate year and term
         const validYears = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
-        const validTerms = ['Fall', 'Spring'];
+        const validTerms = ['Fall', 'Spring', 'Full Year'];
 
         if (!validYears.includes(year)) {
             return { success: false, message: `"${year}" is not a valid year. Please use Freshman, Sophomore, Junior, or Senior.` };
         }
 
         if (!validTerms.includes(term)) {
-            return { success: false, message: `"${term}" is not a valid term. Please use Fall or Spring.` };
+            return { success: false, message: `"${term}" is not a valid term. Please use Fall, Spring, or Full Year.` };
         }
 
         // Check if course already exists
@@ -1336,16 +1431,57 @@ class App {
             return { success: false, message: `"${courseName}" already exists in your course plan.` };
         }
 
+        // Handle Full Year courses
+        if (term === 'Full Year') {
+            // Check if both Fall and Spring have space
+            if (this.coursePlanner[year]['Fall'].length >= 8) {
+                return { success: false, message: `Your ${year} Fall term is already full (8 courses maximum).` };
+            }
+            if (this.coursePlanner[year]['Spring'].length >= 8) {
+                return { success: false, message: `Your ${year} Spring term is already full (8 courses maximum).` };
+            }
+
+            // Add to both Fall and Spring
+            const fallCourse = {
+                id: `course-${Date.now()}-fall`,
+                name: courseName,
+                description: `${courseName} — overview of topics, projects, and key outcomes.`,
+                length: courseLength,
+                grade: courseGrade,
+                isFullYear: true
+            };
+
+            const springCourse = {
+                id: `course-${Date.now()}-spring`,
+                name: courseName,
+                description: `${courseName} — overview of topics, projects, and key outcomes.`,
+                length: courseLength,
+                grade: courseGrade,
+                isFullYear: true
+            };
+
+            this.coursePlanner[year]['Fall'].push(fallCourse);
+            this.coursePlanner[year]['Spring'].push(springCourse);
+            this.savePlannerData();
+            this.renderPlannerGrid();
+
+            this.showToast(`Added ${courseName} to ${year} Fall and Spring`, 'success');
+            return { success: true };
+        }
+
         // Check if term is full (max 8 courses)
         if (this.coursePlanner[year][term].length >= 8) {
             return { success: false, message: `Your ${year} ${term} term is already full (8 courses maximum).` };
         }
 
-        // Add the course
+        // Add the course (single semester)
         const newCourse = {
             id: `course-${Date.now()}`,
             name: courseName,
-            description: `${courseName} — overview of topics, projects, and key outcomes.`
+            description: `${courseName} — overview of topics, projects, and key outcomes.`,
+            length: courseLength,
+            grade: courseGrade,
+            isFullYear: false
         };
 
         this.coursePlanner[year][term].push(newCourse);
@@ -1365,9 +1501,12 @@ class App {
                 if (slot) {
                     // Update slot content
                     slot.innerHTML = courses.map(course => `
-                        <div class="course-item" draggable="true" id="${course.id}" 
+                        <div class="course-item${course.isFullYear ? ' full-year-course' : ''}" draggable="${!course.isFullYear}" id="${course.id}" 
                              data-year="${year}" data-term="${term}">
-                            <span class="course-name">${course.name}</span>
+                            <span class="course-name">
+                                ${course.name}
+                                ${!course.isFullYear && course.length === 'SM' ? '<span class="semester-badge">Semester</span>' : ''}
+                            </span>
                             <button class="remove-course" onclick="window.app.removeCourse('${course.id}', '${year}', '${term}')">×</button>
                         </div>
                     `).join('');
@@ -1392,10 +1531,24 @@ class App {
     }
 
     removeCourse(courseId, year, term) {
-        this.coursePlanner[year][term] = this.coursePlanner[year][term].filter(course => course.id !== courseId);
-        this.savePlannerData();
-        this.renderPlannerGrid();
-        this.showToast('Course removed', 'success');
+        // Find the course to check if it's a full year course
+        const course = this.coursePlanner[year][term].find(c => c.id === courseId);
+        
+        if (course && course.isFullYear) {
+            // Remove from both Fall and Spring
+            const courseName = course.name;
+            this.coursePlanner[year]['Fall'] = this.coursePlanner[year]['Fall'].filter(c => c.name !== courseName);
+            this.coursePlanner[year]['Spring'] = this.coursePlanner[year]['Spring'].filter(c => c.name !== courseName);
+            this.savePlannerData();
+            this.renderPlannerGrid();
+            this.showToast(`Removed full year course: ${courseName}`, 'success');
+        } else {
+            // Remove only from the specified term
+            this.coursePlanner[year][term] = this.coursePlanner[year][term].filter(course => course.id !== courseId);
+            this.savePlannerData();
+            this.renderPlannerGrid();
+            this.showToast('Course removed', 'success');
+        }
     }
 
     savePlannerData() {
