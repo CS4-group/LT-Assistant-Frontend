@@ -269,11 +269,90 @@ body {
     color: var(--gray-600);
 }
 
+.google-signin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 0;
+}
+
+.signin-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    color: var(--gray-600);
+}
+
+.loading-spinner-small {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--gray-200);
+    border-top-color: var(--primary-600);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
 .home-page {
     display: flex;
     flex-direction: column;
     position: relative;
     z-index: 1;
+}
+
+.user-profile-section {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+    opacity: 0;
+    animation: popInLeft 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s forwards;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s var(--ease-smooth), box-shadow 0.3s var(--ease-smooth);
+}
+
+.user-profile:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-600);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    line-height: 1.2;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: var(--gray-600);
+    line-height: 1.2;
 }
 
 .home-bg,
@@ -305,6 +384,8 @@ body {
     gap: 2rem;
     position: relative;
     z-index: 2;
+    opacity: 0;
+    animation: popInScale 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
 }
 
 .login-page-header {
@@ -348,6 +429,8 @@ body {
     margin-top: 1rem;
     position: relative;
     z-index: 2;
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
 }
 
 .feature-grid {
@@ -381,6 +464,9 @@ body {
     justify-content: center;
     gap: 1rem;
     font-size: 1.25rem;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    animation: popInCard 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     font-weight: 600;
     border-radius: var(--border-radius-lg);
     border: none;
@@ -404,6 +490,7 @@ body {
     background: linear-gradient(135deg, var(--primary-color), #d63031);
     color: var(--white);
     box-shadow: 0 4px 20px rgba(196, 37, 37, 0.2), 0 2px 8px rgba(196, 37, 37, 0.15);
+    animation-delay: 0.5s;
 }
 
 .planner-card:hover {
@@ -420,6 +507,7 @@ body {
     background: linear-gradient(135deg, var(--primary-color), #d63031);
     color: var(--white);
     box-shadow: 0 4px 20px rgba(196, 37, 37, 0.2), 0 2px 8px rgba(196, 37, 37, 0.15);
+    animation-delay: 0.6s;
 }
 
 .rating-card:hover {
@@ -448,6 +536,8 @@ body {
     justify-content: center;
     position: relative;
     z-index: 2;
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s forwards;
 }
 
 .home-footer .btn-outline {
@@ -1190,6 +1280,39 @@ body {
     }
 }
 
+@keyframes popInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes popInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.85) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes popInCard {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
 @keyframes fadeInUp {
     from {
         transform: translateY(20px);
@@ -1567,6 +1690,29 @@ body {
 }
 
 @media (max-width: 768px) {
+    .user-profile-section {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .user-profile {
+        padding: 0.4rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .user-name {
+        font-size: 0.8rem;
+    }
+
+    .user-email {
+        font-size: 0.7rem;
+    }
+
     .home-header {
         padding-top: 3rem;
         padding-bottom: 2rem;

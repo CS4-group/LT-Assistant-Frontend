@@ -337,18 +337,47 @@ class App {
     }
 
     setupLoginHandlers() {
-        const form = document.getElementById('login-form');
-        if (!form) return;
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin(e);
-        });
+        // Re-initialize Google Sign-In button
+        const googleButtonContainer = document.querySelector('.g_id_signin');
+        
+        if (googleButtonContainer && window.google) {
+            // Clear any existing button
+            googleButtonContainer.innerHTML = '';
+            
+            // Re-render the Google Sign-In button
+            window.google.accounts.id.initialize({
+                client_id: '1076207663943-9urdbi6g6fbnblt45kbdr6h3tn32p653.apps.googleusercontent.com',
+                callback: handleGoogleSignIn
+            });
+            
+            window.google.accounts.id.renderButton(
+                googleButtonContainer,
+                {
+                    type: 'standard',
+                    size: 'large',
+                    theme: 'outline',
+                    text: 'sign_in_with',
+                    shape: 'rectangular',
+                    logo_alignment: 'left',
+                    width: 350
+                }
+            );
+        }
     }
 
     setupHomeHandlers() {
-        // Home page handlers are inline in the template
-        // navigateTo and logout functions are global
+        // Populate user profile
+        const userName = localStorage.getItem('userName') || 'User';
+        const userEmail = localStorage.getItem('userEmail') || '';
+        const userPicture = localStorage.getItem('userPicture') || 'https://via.placeholder.com/40';
+
+        const userNameEl = document.getElementById('user-name');
+        const userEmailEl = document.getElementById('user-email');
+        const userAvatarEl = document.getElementById('user-avatar');
+
+        if (userNameEl) userNameEl.textContent = userName;
+        if (userEmailEl) userEmailEl.textContent = userEmail;
+        if (userAvatarEl) userAvatarEl.src = userPicture;
     }
 
     setupRatingHandlers() {
@@ -1555,41 +1584,69 @@ class App {
         localStorage.setItem('coursePlanner', JSON.stringify(this.coursePlanner));
     }
 
-    async handleLogin(e) {
-        const form = e.target;
-        const formData = new FormData(form);
-        const email = formData.get('email');
-        const password = formData.get('password');
-
+    async handleGoogleSignIn(googleUser) {
+        const loadingEl = document.getElementById('signin-loading');
+        const googleBtnContainer = document.querySelector('.google-signin-container');
+        
         // Show loading state
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const btnText = submitBtn.querySelector('.btn-text');
-        const btnLoading = submitBtn.querySelector('.btn-loading');
+        if (loadingEl && googleBtnContainer) {
+            googleBtnContainer.classList.add('hidden');
+            loadingEl.classList.remove('hidden');
+        }
 
-        btnText.classList.add('hidden');
-        btnLoading.classList.remove('hidden');
-        submitBtn.disabled = true;
+        try {
+            // Get the ID token from Google
+            const idToken = googleUser.credential;
+            
+            // TODO: Replace with your actual backend API endpoint
+            const API_URL = 'http://localhost:3000/api/auth/google';
+            
+            // Send token to backend for verification
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken })
+            });
 
-        setTimeout(() => {
-            if (email && password) {
-                this.isAuthenticated = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userEmail', email);
-                this.navigateTo('/');
-                this.showToast('Login successful!', 'success');
-            } else {
-                this.showToast('Please enter email and password', 'error');
-                btnText.classList.remove('hidden');
-                btnLoading.classList.add('hidden');
-                submitBtn.disabled = false;
+            if (!response.ok) {
+                throw new Error('Authentication failed');
             }
-        }, 1000);
+
+            const data = await response.json();
+            
+            // Store authentication data
+            this.isAuthenticated = true;
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('authToken', data.token); // JWT token from backend
+            localStorage.setItem('userEmail', data.user.email);
+            localStorage.setItem('userName', data.user.name);
+            localStorage.setItem('userPicture', data.user.picture || '');
+            
+            // Navigate to home
+            this.navigateTo('/');
+            this.showToast(`Welcome, ${data.user.name}!`, 'success');
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            this.showToast('Login failed. Please try again.', 'error');
+            
+            // Reset UI
+            if (loadingEl && googleBtnContainer) {
+                loadingEl.classList.add('hidden');
+                googleBtnContainer.classList.remove('hidden');
+            }
+        }
     }
 
     logout() {
         this.isAuthenticated = false;
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userPicture');
+        localStorage.removeItem('authToken');
         this.navigateTo('/login');
         this.showToast('Logged out successfully', 'success');
     }
@@ -1776,6 +1833,13 @@ function clearPlanner() {
         window.app.savePlannerData();
         window.app.renderPlannerGrid();
         window.app.showToast('Course plan cleared', 'success');
+    }
+}
+
+// Google Sign-In callback (must be global for Google to call it)
+function handleGoogleSignIn(googleUser) {
+    if (window.app) {
+        window.app.handleGoogleSignIn(googleUser);
     }
 }
 
