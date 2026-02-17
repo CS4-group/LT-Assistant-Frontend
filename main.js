@@ -363,6 +363,22 @@ class App {
                 }
             );
         }
+
+        // Bypass login button
+        const bypassBtn = document.getElementById('bypass-login-btn');
+        if (bypassBtn) {
+            bypassBtn.addEventListener('click', () => this.bypassLogin());
+        }
+    }
+
+    bypassLogin() {
+        this.isAuthenticated = true;
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', 'Guest');
+        localStorage.setItem('userEmail', '');
+        localStorage.setItem('userPicture', '');
+        this.navigateTo('/');
+        this.showToast('Signed in as Guest', 'success');
     }
 
     setupHomeHandlers() {
@@ -543,7 +559,9 @@ class App {
 
         // Validate grade level against target year
         if (course.grade) {
-            const gradeNum = parseInt(course.grade);
+            // Parse all grades (handles "9, 10" format)
+            const gradeNums = course.grade.split(',').map(g => parseInt(g.trim())).filter(g => !isNaN(g));
+            
             const yearGradeMap = {
                 'Freshman': 9,
                 'Sophomore': 10,
@@ -552,10 +570,12 @@ class App {
             };
             
             const targetGrade = yearGradeMap[targetYear];
-            if (gradeNum && gradeNum !== targetGrade) {
+            
+            // Check if the target year matches ANY of the allowed grades
+            if (gradeNums.length > 0 && !gradeNums.includes(targetGrade)) {
                 const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
-                const correctYear = gradeYearMap[gradeNum] || `Grade ${gradeNum}`;
-                this.showToast(`Cannot move ${course.name}. This course is for grade ${gradeNum} (${correctYear} year).`, 'error');
+                const allowedYears = gradeNums.map(g => gradeYearMap[g] || `Grade ${g}`).join(' or ');
+                this.showToast(`Cannot move ${course.name}. This course is for ${allowedYears}.`, 'error');
                 return;
             }
         }
@@ -753,6 +773,15 @@ class App {
                     selectedCourseLength = courseDetails.length || 'SM';
                     selectedCourseGrade = courseDetails.grade || '';
                     
+                    // Auto-select "Full Year" if course is a year-long course
+                    const termSelect = document.getElementById('term-select');
+                    if (selectedCourseLength === 'YR' && termSelect) {
+                        termSelect.value = 'Full Year';
+                    } else if (selectedCourseLength === 'SM' && termSelect && termSelect.value === 'Full Year') {
+                        // If it's a semester course and Full Year is selected, change to Fall
+                        termSelect.value = 'Fall';
+                    }
+                    
                     const lengthText = selectedCourseLength === 'YR' ? 'Full Year' : 'Semester';
                     const gradeText = selectedCourseGrade ? `Grade: ${selectedCourseGrade}` : '';
                     
@@ -807,7 +836,9 @@ class App {
 
             // Validate grade level against year
             if (selectedCourseGrade) {
-                const gradeNum = parseInt(selectedCourseGrade);
+                // Parse all grades (handles "9, 10" format)
+                const gradeNums = selectedCourseGrade.split(',').map(g => parseInt(g.trim())).filter(g => !isNaN(g));
+                
                 const yearGradeMap = {
                     'Freshman': 9,
                     'Sophomore': 10,
@@ -816,10 +847,12 @@ class App {
                 };
                 
                 const expectedGrade = yearGradeMap[year];
-                if (gradeNum && gradeNum !== expectedGrade) {
+                
+                // Check if the selected year matches ANY of the allowed grades
+                if (gradeNums.length > 0 && !gradeNums.includes(expectedGrade)) {
                     const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
-                    const correctYear = gradeYearMap[gradeNum] || `Grade ${gradeNum}`;
-                    this.showToast(`This course is for grade ${gradeNum} (${correctYear} year). Please add it to the correct year.`, 'error');
+                    const allowedYears = gradeNums.map(g => gradeYearMap[g] || `Grade ${g}`).join(' or ');
+                    this.showToast(`This course is for ${allowedYears}. Please add it to the correct year.`, 'error');
                     return;
                 }
             }
