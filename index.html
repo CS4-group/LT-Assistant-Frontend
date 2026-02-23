@@ -267,6 +267,188 @@
         </div>
     </template>
 
+    <!-- Onboarding page -->
+    <template id="onboarding-template">
+        <div class="page-container onboarding-page">
+            <div class="login-bg">
+                <img src="title-bg.jpg" alt="" class="bg-image">
+                <div class="bg-overlay"></div>
+            </div>
+
+            <div class="onboarding-wrapper">
+                <div class="onboarding-header">
+                    <img src="sift.png" alt="LT" class="logo">
+                    <h1 class="app-title">LT Assistant</h1>
+                    <p class="subtitle">Let's personalize your experience</p>
+                </div>
+
+                <div class="onboarding-card card">
+                    <!-- Progress bar -->
+                    <div class="onboarding-progress">
+                        <div class="progress-track">
+                            <div class="progress-fill" id="onboarding-progress-fill"></div>
+                        </div>
+                        <span class="progress-label" id="onboarding-progress-label">Step 1 of 5</span>
+                    </div>
+
+                    <!-- Step 1: Grade Level -->
+                    <div class="onboarding-step active" data-step="1">
+                        <h2 class="step-title">What grade are you in?</h2>
+                        <p class="step-subtitle">We'll tailor your course plan to your current year.</p>
+                        <div class="option-grid option-grid-2">
+                            <button class="option-card" data-field="gradeLevel" data-value="Freshman">
+                                <span class="option-label">Freshman</span>
+                                <span class="option-sub">9th Grade</span>
+                            </button>
+                            <button class="option-card" data-field="gradeLevel" data-value="Sophomore">
+                                <span class="option-label">Sophomore</span>
+                                <span class="option-sub">10th Grade</span>
+                            </button>
+                            <button class="option-card" data-field="gradeLevel" data-value="Junior">
+                                <span class="option-label">Junior</span>
+                                <span class="option-sub">11th Grade</span>
+                            </button>
+                            <button class="option-card" data-field="gradeLevel" data-value="Senior">
+                                <span class="option-label">Senior</span>
+                                <span class="option-sub">12th Grade</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Career Path -->
+                    <div class="onboarding-step" data-step="2">
+                        <h2 class="step-title">What's your intended career path?</h2>
+                        <p class="step-subtitle">This helps us recommend the right courses for your future.</p>
+                        <div class="option-grid option-grid-2">
+                            <button class="option-card" data-field="careerPath" data-value="STEM">
+                                <span class="option-label">STEM</span>
+                                <span class="option-sub">Science, Technology, Engineering, Math</span>
+                            </button>
+                            <button class="option-card" data-field="careerPath" data-value="Medicine/Healthcare">
+                                <span class="option-label">Medicine / Healthcare</span>
+                                <span class="option-sub">Doctor, Nurse, Therapist...</span>
+                            </button>
+                            <button class="option-card" data-field="careerPath" data-value="Business/Finance">
+                                <span class="option-label">Business / Finance</span>
+                                <span class="option-sub">Entrepreneur, Analyst, Banker...</span>
+                            </button>
+                            <button class="option-card" data-field="careerPath" data-value="Law/Government">
+                                <span class="option-label">Law / Government</span>
+                                <span class="option-sub">Lawyer, Policy, Public Service...</span>
+                            </button>
+                            <button class="option-card" data-field="careerPath" data-value="Arts/Humanities">
+                                <span class="option-label">Arts / Humanities</span>
+                                <span class="option-sub">Writing, Design, Philosophy...</span>
+                            </button>
+                            <button class="option-card" data-field="careerPath" data-value="Education">
+                                <span class="option-label">Education</span>
+                                <span class="option-sub">Teaching, Research, Academia...</span>
+                            </button>
+                            <button class="option-card option-card-wide" data-field="careerPath" data-value="Undecided">
+                                <span class="option-label">Undecided</span>
+                                <span class="option-sub">Still exploring my options</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: College Goals -->
+                    <div class="onboarding-step" data-step="3">
+                        <h2 class="step-title">What are your college goals?</h2>
+                        <p class="step-subtitle">We'll help you build the right academic profile.</p>
+                        <div class="option-grid option-grid-1">
+                            <button class="option-card" data-field="collegeGoals" data-value="Ivy League / Top 10">
+                                <span class="option-label">Ivy League / Top 10</span>
+                                <span class="option-sub">Harvard, MIT, Stanford, etc.</span>
+                            </button>
+                            <button class="option-card" data-field="collegeGoals" data-value="Top 25-50">
+                                <span class="option-label">Top 25–50 University</span>
+                                <span class="option-sub">Highly selective national universities</span>
+                            </button>
+                            <button class="option-card" data-field="collegeGoals" data-value="State School">
+                                <span class="option-label">State / Public University</span>
+                                <span class="option-sub">Great value and strong programs</span>
+                            </button>
+                            <button class="option-card" data-field="collegeGoals" data-value="Community College">
+                                <span class="option-label">Community College</span>
+                                <span class="option-sub">Two-year college or transfer path</span>
+                            </button>
+                            <button class="option-card" data-field="collegeGoals" data-value="Undecided">
+                                <span class="option-label">Undecided</span>
+                                <span class="option-sub">Haven't decided yet</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Academic Interests -->
+                    <div class="onboarding-step" data-step="4">
+                        <h2 class="step-title">What subjects interest you most?</h2>
+                        <p class="step-subtitle">Select all that apply — your AI assistant will use these to guide recommendations.</p>
+                        <div class="option-grid option-grid-3">
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Math">
+                                <span class="option-label">Math</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Science">
+                                <span class="option-label">Science</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="English/Literature">
+                                <span class="option-label">English / Literature</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="History">
+                                <span class="option-label">History</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Computer Science">
+                                <span class="option-label">Computer Science</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Foreign Languages">
+                                <span class="option-label">Foreign Languages</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Arts">
+                                <span class="option-label">Arts</span>
+                            </button>
+                            <button class="option-card multi-select" data-field="academicInterests" data-value="Social Studies">
+                                <span class="option-label">Social Studies</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: GPA Goal -->
+                    <div class="onboarding-step" data-step="5">
+                        <h2 class="step-title">What's your GPA goal?</h2>
+                        <p class="step-subtitle">This helps us suggest the right course difficulty for you.</p>
+                        <div class="option-grid option-grid-1">
+                            <button class="option-card" data-field="gpaGoal" data-value="4.0+">
+                                <span class="option-label">4.0+</span>
+                                <span class="option-sub">Aiming for a perfect GPA / top of class</span>
+                            </button>
+                            <button class="option-card" data-field="gpaGoal" data-value="3.5-3.9">
+                                <span class="option-label">3.5 – 3.9</span>
+                                <span class="option-sub">Strong academic performance</span>
+                            </button>
+                            <button class="option-card" data-field="gpaGoal" data-value="3.0-3.4">
+                                <span class="option-label">3.0 – 3.4</span>
+                                <span class="option-sub">Solid, well-rounded student</span>
+                            </button>
+                            <button class="option-card" data-field="gpaGoal" data-value="2.5-2.9">
+                                <span class="option-label">2.5 – 2.9</span>
+                                <span class="option-sub">Balancing coursework with other priorities</span>
+                            </button>
+                            <button class="option-card" data-field="gpaGoal" data-value="Just passing">
+                                <span class="option-label">Just Passing</span>
+                                <span class="option-sub">Focused on completing requirements</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Navigation buttons -->
+                    <div class="onboarding-nav">
+                        <button class="btn btn-outline" id="onboarding-back-btn">Back</button>
+                        <button class="btn btn-primary" id="onboarding-next-btn" disabled>Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <template id="loading-template">
         <div class="page-container loading-page">
             <div class="loading-spinner"></div>

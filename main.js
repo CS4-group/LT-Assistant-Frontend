@@ -271,6 +271,9 @@ class App {
             case '/login':
                 this.renderPage('login');
                 break;
+            case '/onboarding':
+                this.renderPage('onboarding');
+                break;
             case '/':
                 this.renderPage('home');
                 break;
@@ -312,6 +315,9 @@ class App {
         switch (pageName) {
             case 'login':
                 this.setupLoginHandlers();
+                break;
+            case 'onboarding':
+                this.setupOnboardingHandlers();
                 break;
             case 'home':
                 this.setupHomeHandlers();
@@ -379,6 +385,131 @@ class App {
         localStorage.setItem('userPicture', '');
         this.navigateTo('/');
         this.showToast('Signed in as Guest', 'success');
+    }
+
+    setupOnboardingHandlers() {
+        const TOTAL_STEPS = 5;
+        let currentStep = 1;
+        // answers: gradeLevel, careerPath, collegeGoals, academicInterests (array), gpaGoal
+        const answers = { gradeLevel: null, careerPath: null, collegeGoals: null, academicInterests: [], gpaGoal: null };
+
+        const progressFill = document.getElementById('onboarding-progress-fill');
+        const progressLabel = document.getElementById('onboarding-progress-label');
+        const backBtn = document.getElementById('onboarding-back-btn');
+        const nextBtn = document.getElementById('onboarding-next-btn');
+
+        const updateProgress = () => {
+            const pct = ((currentStep - 1) / TOTAL_STEPS) * 100;
+            if (progressFill) progressFill.style.width = `${pct}%`;
+            if (progressLabel) progressLabel.textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
+        };
+
+        const isStepComplete = (step) => {
+            switch (step) {
+                case 1: return !!answers.gradeLevel;
+                case 2: return !!answers.careerPath;
+                case 3: return !!answers.collegeGoals;
+                case 4: return answers.academicInterests.length > 0;
+                case 5: return !!answers.gpaGoal;
+                default: return false;
+            }
+        };
+
+        const refreshNextBtn = () => {
+            if (!nextBtn) return;
+            const complete = isStepComplete(currentStep);
+            nextBtn.disabled = !complete;
+            nextBtn.textContent = currentStep === TOTAL_STEPS ? 'Finish' : 'Next';
+        };
+
+        const showStep = (step) => {
+            document.querySelectorAll('.onboarding-step').forEach(el => el.classList.remove('active'));
+            const stepEl = document.querySelector(`.onboarding-step[data-step="${step}"]`);
+            if (stepEl) stepEl.classList.add('active');
+            if (backBtn) backBtn.style.visibility = step === 1 ? 'hidden' : 'visible';
+            updateProgress();
+            refreshNextBtn();
+        };
+
+        // Option card click handler (single-select and multi-select)
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const field = card.dataset.field;
+                const value = card.dataset.value;
+                const isMulti = card.classList.contains('multi-select');
+
+                if (isMulti) {
+                    // Toggle selection for academic interests
+                    const idx = answers.academicInterests.indexOf(value);
+                    if (idx === -1) {
+                        answers.academicInterests.push(value);
+                        card.classList.add('selected');
+                    } else {
+                        answers.academicInterests.splice(idx, 1);
+                        card.classList.remove('selected');
+                    }
+                } else {
+                    // Deselect siblings in same step
+                    const stepEl = card.closest('.onboarding-step');
+                    stepEl.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    answers[field] = value;
+                }
+                refreshNextBtn();
+            });
+        });
+
+        // Back button
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    showStep(currentStep);
+                }
+            });
+        }
+
+        // Next / Finish button
+        if (nextBtn) {
+            nextBtn.addEventListener('click', async () => {
+                if (!isStepComplete(currentStep)) return;
+
+                if (currentStep < TOTAL_STEPS) {
+                    currentStep++;
+                    showStep(currentStep);
+                } else {
+                    await this.submitOnboarding(answers);
+                }
+            });
+        }
+
+        showStep(1);
+    }
+
+    async submitOnboarding(answers) {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                await fetch('http://localhost:3000/api/user/goals', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(answers)
+                });
+            }
+        } catch (err) {
+            // Proceed even if backend is unavailable
+            console.warn('Could not save goals to backend:', err);
+        }
+
+        // Persist locally and complete onboarding
+        localStorage.setItem('onboardingComplete', 'true');
+        localStorage.setItem('userGoals', JSON.stringify(answers));
+        this.navigateTo('/');
+        const name = localStorage.getItem('userName') || 'there';
+        this.showToast(`All set, ${name}! Your profile is ready.`, 'success');
     }
 
     setupHomeHandlers() {
@@ -1656,10 +1787,17 @@ class App {
             localStorage.setItem('userEmail', data.user.email);
             localStorage.setItem('userName', data.user.name);
             localStorage.setItem('userPicture', data.user.picture || '');
-            
-            // Navigate to home
-            this.navigateTo('/');
-            this.showToast(`Welcome, ${data.user.name}!`, 'success');
+
+            // Send new users through onboarding
+            // data.isNewUser comes from backend; localStorage flag is a fallback for returning users on new devices
+            const needsOnboarding = data.isNewUser || !localStorage.getItem('onboardingComplete');
+            if (needsOnboarding) {
+                this.navigateTo('/onboarding');
+                this.showToast(`Welcome, ${data.user.name}! Let's set up your profile.`, 'success');
+            } else {
+                this.navigateTo('/');
+                this.showToast(`Welcome back, ${data.user.name}!`, 'success');
+            }
             
         } catch (error) {
             console.error('Login error:', error);
