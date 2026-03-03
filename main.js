@@ -204,7 +204,10 @@ class App {
     async fetchReviews(entityType, entityId) {
         try {
             const url = `${this.apiBaseUrl}/api/reviews?entityType=${entityType}&entityId=${entityId}`;
-            const response = await fetch(url);
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(url, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -222,10 +225,12 @@ class App {
 
     async createReview(entityType, entityId, rating, text) {
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${this.apiBaseUrl}/api/reviews`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     entityType,
@@ -585,40 +590,117 @@ class App {
             Senior: { Fall: [], Spring: [] }
         };
 
-        this.expandedYear = null; // Track which year is expanded
+        this.activeYear = 'Freshman';
+        this.plannerDragData = null;
 
-        // Load saved planner data
-        const saved = localStorage.getItem('coursePlanner');
-        if (saved) {
-            this.coursePlanner = JSON.parse(saved);
-            this.renderPlannerGrid();
-        }
-
-        // Setup year expansion click handlers
-        this.setupYearExpansion();
-
-        // Setup chatbot functionality
+        this.setupPlannerTabs();
         this.setupChatbot();
+        this.loadPlannerFromBackend();
+        this.initPlannerDragDrop();
     }
 
-    setupYearExpansion() {
-        const yearSections = document.querySelectorAll('.year-section');
-        yearSections.forEach(section => {
-            const yearTitle = section.querySelector('.year-title');
-            if (yearTitle) {
-                yearTitle.style.cursor = 'pointer';
-                yearTitle.addEventListener('click', () => {
-                    const year = section.dataset.year;
-                    this.toggleYearExpansion(year);
-                });
-            }
+    setupPlannerTabs() {
+        document.querySelectorAll('.planner-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.planner-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.activeYear = tab.dataset.year;
+                this.renderYearView();
+            });
         });
     }
 
+    toSparseArray(denseArr) {
+        const sparse = new Array(8).fill(null);
+        denseArr.forEach((item, i) => { if (i < 8) sparse[i] = item || null; });
+        return sparse;
+    }
+
+    countSlots(arr) {
+        return arr.filter(Boolean).length;
+    }
+
     setupDragAndDrop() {
-        const app = this;
-        // Course items are dynamic, so we might need event delegation or re-attaching listeners
-        // For simplicity with this current architecture, listeners are attached in renderPlannerGrid
+        // Handled by initPlannerDragDrop via event delegation
+    }
+
+    initPlannerDragDrop() {
+        const container = document.getElementById('planner-year-content');
+        if (!container) return;
+
+        container.addEventListener('dragstart', e => {
+            const card = e.target.closest('.course-card[draggable="true"]');
+            if (!card) return;
+            this.plannerDragData = {
+                id: card.dataset.courseId,
+                year: card.dataset.year,
+                term: card.dataset.term,
+                periodIdx: parseInt(card.dataset.periodIdx)
+            };
+            requestAnimationFrame(() => card.classList.add('dragging'));
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', JSON.stringify(this.plannerDragData));
+        });
+
+        container.addEventListener('dragend', () => {
+            container.querySelectorAll('.dragging, .drag-over').forEach(el =>
+                el.classList.remove('dragging', 'drag-over')
+            );
+            this.plannerDragData = null;
+        });
+
+        container.addEventListener('dragover', e => {
+            const slot = e.target.closest('.course-card, .empty-half, .empty-slot');
+            if (!slot || !this.plannerDragData) return;
+            e.preventDefault();
+            container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            slot.classList.add('drag-over');
+        });
+
+        container.addEventListener('dragleave', e => {
+            if (!container.contains(e.relatedTarget)) {
+                container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            }
+        });
+
+        container.addEventListener('drop', e => {
+            e.preventDefault();
+            const slot = e.target.closest('.course-card, .empty-half, .empty-slot');
+            if (!slot || !this.plannerDragData) return;
+
+            container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+            const { id, year: srcYear, term: srcTerm, periodIdx: srcIdx } = this.plannerDragData;
+            const tgtTerm = slot.dataset.term;
+            const tgtIdx = parseInt(slot.dataset.periodIdx);
+
+            if (!tgtTerm || isNaN(tgtIdx)) return;
+            if (srcTerm === tgtTerm && srcIdx === tgtIdx) return;
+
+            this.swapPeriodSlots(this.activeYear, srcTerm, srcIdx, tgtTerm, tgtIdx);
+        });
+    }
+
+    swapPeriodSlots(year, fromTerm, fromIdx, toTerm, toIdx) {
+        const fromArr = this.coursePlanner[year][fromTerm];
+        while (fromArr.length < 8) fromArr.push(null);
+
+        const fromCourse = fromArr[fromIdx] || null;
+        if (!fromCourse) return;
+
+        // Full-year courses live in Fall; if dropped on a Spring slot redirect to Fall
+        const effectiveTgtTerm = fromCourse.isFullYear ? 'Fall' : toTerm;
+        const toArr = this.coursePlanner[year][effectiveTgtTerm];
+        while (toArr.length < 8) toArr.push(null);
+
+        if (fromTerm === effectiveTgtTerm && fromIdx === toIdx) return;
+
+        const toCourse = toArr[toIdx] || null;
+        fromArr[fromIdx] = toCourse;
+        toArr[toIdx] = fromCourse;
+
+        this.savePlannerData();
+        this.renderYearView();
     }
 
     handleDragStart(e, courseId, sourceYear, sourceTerm) {
@@ -674,9 +756,8 @@ class App {
     }
 
     moveCourse(courseId, sourceYear, sourceTerm, targetYear, targetTerm) {
-        // Find the course
         const sourceCourses = this.coursePlanner[sourceYear][sourceTerm];
-        const courseIndex = sourceCourses.findIndex(c => c.id === courseId);
+        const courseIndex = sourceCourses.findIndex(c => c && c.id === courseId);
 
         if (courseIndex === -1) return;
 
@@ -712,100 +793,52 @@ class App {
         }
 
         // Check limits
-        if (this.coursePlanner[targetYear][targetTerm].length >= 8) {
+        if (this.countSlots(this.coursePlanner[targetYear][targetTerm]) >= 8) {
             this.showToast(`Cannot move ${course.name}. ${targetYear} ${targetTerm} is full.`, 'error');
             return;
         }
 
-        // Remove from source
-        this.coursePlanner[sourceYear][sourceTerm].splice(courseIndex, 1);
-
-        // Add to target
-        this.coursePlanner[targetYear][targetTerm].push(course);
-
-        // Save and Render
+        // Optimistic local update — null source slot, place in first empty target slot
+        const targetCourses = this.coursePlanner[targetYear][targetTerm];
+        while (targetCourses.length < 8) targetCourses.push(null);
+        sourceCourses[courseIndex] = null;
+        const firstEmpty = targetCourses.findIndex(s => !s);
+        if (firstEmpty !== -1) targetCourses[firstEmpty] = course;
         this.savePlannerData();
         this.renderPlannerGrid();
         this.showToast(`Moved ${course.name} to ${targetYear} ${targetTerm}`, 'success');
-    }
 
-    toggleYearExpansion(year) {
-        if (this.expandedYear === year) {
-            // Collapse back to grid view
-            this.expandedYear = null;
-            this.renderGridView();
-        } else {
-            // Expand this year
-            this.expandedYear = year;
-            this.renderExpandedView(year);
+        // Sync with backend
+        if (course.courseId != null) {
+            this.plannerRequest('POST', '/move', {
+                courseId: course.courseId,
+                fromYear: sourceYear.toLowerCase(),
+                fromSemester: sourceTerm.toLowerCase(),
+                toYear: targetYear.toLowerCase(),
+                toSemester: targetTerm.toLowerCase()
+            }).then(() => this.loadPlannerFromBackend()).catch(err => {
+                this.showToast(err.message || 'Failed to sync move with server.', 'error');
+            });
         }
     }
 
     renderGridView() {
-        const plannerGrid = document.querySelector('.planner-grid');
-        const yearSections = document.querySelectorAll('.year-section');
-
-        // Show all year sections
-        yearSections.forEach(section => {
-            section.style.display = 'block';
-            section.classList.remove('expanded');
-
-            // Remove add course button if exists
-            const addCourseBtn = section.querySelector('.add-course-btn-expanded');
-            if (addCourseBtn) {
-                addCourseBtn.remove();
-            }
-        });
-
-        // Reset grid layout
-        plannerGrid.style.gridTemplateColumns = '1fr 1fr';
-
-        // Remove back button if exists
-        const backButton = document.querySelector('.back-to-grid-btn');
-        if (backButton) {
-            backButton.remove();
-        }
+        this.renderYearView();
     }
 
     renderExpandedView(year) {
-        const plannerGrid = document.querySelector('.planner-grid');
-        const yearSections = document.querySelectorAll('.year-section');
-
-        // Hide all year sections except the selected one
-        yearSections.forEach(section => {
-            if (section.dataset.year === year) {
-                section.style.display = 'block';
-                section.classList.add('expanded');
-
-                // Add "Add Course" button if it doesn't exist
-                if (!section.querySelector('.add-course-btn-expanded')) {
-                    const addCourseBtn = document.createElement('button');
-                    addCourseBtn.className = 'btn add-course-btn-expanded';
-                    addCourseBtn.textContent = '+ Add Course';
-                    addCourseBtn.onclick = () => this.openAddCourseModal(year);
-                    section.appendChild(addCourseBtn);
-                }
-            } else {
-                section.style.display = 'none';
-            }
+        this.activeYear = year;
+        document.querySelectorAll('.planner-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.year === year);
         });
-
-        // Change grid layout to single column
-        plannerGrid.style.gridTemplateColumns = '1fr';
-
-        // Add back button if it doesn't exist
-        if (!document.querySelector('.back-to-grid-btn')) {
-            const backButton = document.createElement('button');
-            backButton.className = 'btn back-to-grid-btn';
-            backButton.textContent = '← Back to All Years';
-            backButton.onclick = () => this.toggleYearExpansion(year);
-
-            const plannerHeader = document.querySelector('.planner-header .header-right');
-            plannerHeader.insertBefore(backButton, plannerHeader.firstChild);
-        }
+        this.renderYearView();
     }
 
-    async openAddCourseModal(year) {
+    toggleYearExpansion(year) {
+        this.renderExpandedView(year);
+    }
+
+    async openAddCourseModal(year, defaultTerm = 'Fall', periodIdx = null) {
         // Fetch courses if not already loaded
         if (!this.courseNames || this.courseNames.length === 0) {
             await this.fetchCourseNames();
@@ -842,9 +875,9 @@ class App {
         termSection.innerHTML = `
             <label class="form-label">Select Term</label>
             <select id="term-select" class="form-input">
-                <option value="Fall">Fall</option>
-                <option value="Spring">Spring</option>
-                <option value="Full Year">Full Year</option>
+                <option value="Fall"${defaultTerm === 'Fall' ? ' selected' : ''}>Fall</option>
+                <option value="Spring"${defaultTerm === 'Spring' ? ' selected' : ''}>Spring</option>
+                <option value="Full Year"${defaultTerm === 'Full Year' ? ' selected' : ''}>Full Year</option>
             </select>
         `;
 
@@ -946,7 +979,7 @@ class App {
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-primary';
         addBtn.textContent = 'Add Course';
-        addBtn.onclick = () => {
+        addBtn.onclick = async () => {
             const term = document.getElementById('term-select').value;
 
             if (!selectedCourseId) {
@@ -990,7 +1023,7 @@ class App {
 
             const selectedCourse = this.courseNames.find(c => String(c.id) === String(selectedCourseId));
             if (selectedCourse) {
-                const result = this.addCourseFromChatbot(selectedCourse.title, year, term, selectedCourseLength, selectedCourseGrade);
+                const result = await this.addCourseFromChatbot(selectedCourse.title, year, term, selectedCourseLength, selectedCourseGrade, periodIdx);
                 if (result.success) {
                     modal.remove();
                 } else {
@@ -1033,21 +1066,13 @@ class App {
         // Update sidebar title
         document.getElementById('sidebar-title').textContent = `${tabName.charAt(0).toUpperCase() + tabName.slice(1)} List`;
 
-        // Clear main content with fade
+        // Fade out current content
         const details = document.getElementById('item-details');
+        details.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
         details.style.opacity = '0';
         details.style.transform = 'translateY(12px)';
-        setTimeout(() => {
-            details.innerHTML = '<p>Select an item from the list to see reviews.</p>';
-            details.style.opacity = '1';
-            details.style.transform = 'translateY(0)';
-            details.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        }, 150);
 
-        // Disable add review button until item is selected
-        document.getElementById('header-add-review-btn').disabled = true;
-
-        // Load data for the selected tab from API
+        // Load data for the selected tab from API (auto-selects first item)
         await this.loadInitialData();
     }
 
@@ -1117,12 +1142,18 @@ class App {
         this.updateItemsList(); // Refresh to show selection
 
         // Show loading state for item details
+        const itemDetails = document.getElementById('item-details');
         const loadingText = this.currentTab === 'courses' ? 'Loading course details...' :
             this.currentTab === 'clubs' ? 'Loading club details...' :
                 'Loading teacher details...';
-        document.getElementById('item-details').innerHTML = `<div class="loading-state">${loadingText}</div>`;
+        itemDetails.innerHTML = `<div class="loading-state">${loadingText}</div>`;
 
         await this.updateItemDetails();
+
+        // Fade content back in
+        itemDetails.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        itemDetails.style.opacity = '1';
+        itemDetails.style.transform = 'translateY(0)';
 
         // Enable add review button
         document.getElementById('header-add-review-btn').disabled = false;
@@ -1202,15 +1233,36 @@ class App {
                     </select>
                 </div>
                 ${reviews.length > 0 ?
-                reviews.map((review, idx) => `
-                        <div class="review-card" style="animation-delay: ${Math.min(idx * 0.06, 0.6)}s">
+                reviews.map((review, idx) => {
+                    const likeCount = review.thumbsUp ?? 0;
+                    const isLiked = review.userLiked ?? false;
+                    const avatar = review.userPicture
+                        ? `<img src="${review.userPicture}" class="review-avatar" alt="${review.userName}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                        : '';
+                    const fallbackAvatar = `<div class="review-avatar-fallback" ${review.userPicture ? 'style="display:none"' : ''}>${(review.userName || 'A').charAt(0).toUpperCase()}</div>`;
+                    const displayName = review.userName || 'Anonymous User';
+                    const timeAgo = review.timestamp ? this.formatTimeAgo(review.timestamp) : '';
+                    return `
+                        <div class="review-card" style="animation-delay: ${Math.min(idx * 0.06, 0.6)}s" data-review-id="${review.id}">
                             <div class="review-header">
-                                <strong>Anonymous User</strong>
+                                <div class="review-user">
+                                    ${avatar}${fallbackAvatar}
+                                    <div class="review-user-info">
+                                        <strong>${displayName}</strong>
+                                        ${timeAgo ? `<span class="review-timestamp">${timeAgo}</span>` : ''}
+                                    </div>
+                                </div>
                                 <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
                             </div>
                             ${review.text ? `<p>${review.text}</p>` : '<p><em>No comment provided</em></p>'}
+                            <div class="review-votes">
+                                <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="window.app.likeReview('${review.id}', ${isLiked})">
+                                    ${isLiked ? '❤️' : '🤍'} <span class="like-count">${likeCount}</span>
+                                </button>
+                            </div>
                         </div>
-                    `).join('') :
+                    `;
+                }).join('') :
                 (this.reviewFilterRating !== 'all' ? '<p>No reviews with this rating.</p>' : '<p>No reviews yet. Be the first to add one!</p>')
             }
             </div>
@@ -1425,6 +1477,11 @@ class App {
                 return;
             }
 
+            if (this.containsBadWords(description)) {
+                this.showToast('Your review contains inappropriate language. Please revise it.', 'error');
+                return;
+            }
+
             // Determine entity type based on current tab
             let entityType = '';
             if (this.currentTab === 'courses') {
@@ -1459,13 +1516,79 @@ class App {
     }
 
     filterBadWords(text) {
-        // List of bad words to filter (you can expand this list)
-
+        const badWords = [
+            'fuck', 'shit', 'ass', 'bitch', 'damn', 'bastard', 'dick', 'piss',
+            'crap', 'hell', 'slut', 'whore', 'cunt', 'fag', 'nigger', 'nigga',
+            'retard', 'moron', 'idiot', 'stupid', 'dumb', 'loser', 'suck',
+            'stfu', 'wtf', 'lmfao', 'bullshit', 'asshole', 'douchebag',
+            'motherfucker', 'fucker', 'dipshit', 'shitty', 'bitchy', 'dumbass'
+        ];
 
         let filteredText = text;
-
-
+        for (const word of badWords) {
+            const regex = new RegExp(`\\b${word}\\b`, 'gi');
+            filteredText = filteredText.replace(regex, '*'.repeat(word.length));
+        }
         return filteredText;
+    }
+
+    containsBadWords(text) {
+        const badWords = [
+            'fuck', 'shit', 'ass', 'bitch', 'damn', 'bastard', 'dick', 'piss',
+            'crap', 'hell', 'slut', 'whore', 'cunt', 'fag', 'nigger', 'nigga',
+            'retard', 'moron', 'idiot', 'stupid', 'dumb', 'loser', 'suck',
+            'stfu', 'wtf', 'lmfao', 'bullshit', 'asshole', 'douchebag',
+            'motherfucker', 'fucker', 'dipshit', 'shitty', 'bitchy', 'dumbass'
+        ];
+
+        const lower = text.toLowerCase();
+        return badWords.some(word => new RegExp(`\\b${word}\\b`, 'i').test(lower));
+    }
+
+    formatTimeAgo(timestamp) {
+        const diff = Date.now() - new Date(timestamp).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        if (days < 30) return `${days}d ago`;
+        const months = Math.floor(days / 30);
+        if (months < 12) return `${months}mo ago`;
+        return `${Math.floor(months / 12)}y ago`;
+    }
+
+    async likeReview(reviewId, currentlyLiked) {
+        const card = document.querySelector(`.review-card[data-review-id="${reviewId}"]`);
+        if (!card) return;
+
+        const btn = card.querySelector('.like-btn');
+        const countEl = card.querySelector('.like-count');
+        if (!btn || !countEl) return;
+
+        const newLiked = !currentlyLiked;
+        const delta = newLiked ? 1 : -1;
+        const newCount = Math.max(0, parseInt(countEl.textContent) + delta);
+
+        // Optimistic UI update
+        btn.classList.toggle('liked', newLiked);
+        btn.innerHTML = `${newLiked ? '❤️' : '🤍'} <span class="like-count">${newCount}</span>`;
+        btn.setAttribute('onclick', `window.app.likeReview('${reviewId}', ${newLiked})`);
+
+        // Sync with backend
+        try {
+            const token = localStorage.getItem('authToken');
+            await fetch(`${this.apiBaseUrl}/api/reviews/${reviewId}/like`, {
+                method: newLiked ? 'POST' : 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        } catch (err) {
+            // Revert on failure
+            btn.classList.toggle('liked', currentlyLiked);
+            btn.innerHTML = `${currentlyLiked ? '❤️' : '🤍'} <span class="like-count">${Math.max(0, newCount - delta)}</span>`;
+            btn.setAttribute('onclick', `window.app.likeReview('${reviewId}', ${currentlyLiked})`);
+        }
     }
 
     setupChatbot() {
@@ -1600,152 +1723,289 @@ class App {
         }
     }
 
-    addCourseFromChatbot(courseName, year, term, courseLength = 'SM', courseGrade = '') {
-        // Validate year and term
+    async addCourseFromChatbot(courseName, year, term, courseLength = 'SM', courseGrade = '', periodIdx = null) {
         const validYears = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
         const validTerms = ['Fall', 'Spring', 'Full Year'];
 
         if (!validYears.includes(year)) {
             return { success: false, message: `"${year}" is not a valid year. Please use Freshman, Sophomore, Junior, or Senior.` };
         }
-
         if (!validTerms.includes(term)) {
             return { success: false, message: `"${term}" is not a valid term. Please use Fall, Spring, or Full Year.` };
         }
 
-        // Check if course already exists
         const exists = Object.values(this.coursePlanner).some(yearData =>
             Object.values(yearData).some(termCourses =>
-                termCourses.some(course => course.name.toLowerCase() === courseName.toLowerCase())
+                termCourses.some(c => c && c.name.toLowerCase() === courseName.toLowerCase())
             )
         );
-
         if (exists) {
             return { success: false, message: `"${courseName}" already exists in your course plan.` };
         }
 
-        // Handle Full Year courses
-        if (term === 'Full Year') {
-            // Check if both Fall and Spring have space
-            if (this.coursePlanner[year]['Fall'].length >= 8) {
-                return { success: false, message: `Your ${year} Fall term is already full (8 courses maximum).` };
-            }
-            if (this.coursePlanner[year]['Spring'].length >= 8) {
-                return { success: false, message: `Your ${year} Spring term is already full (8 courses maximum).` };
-            }
-
-            // Add to both Fall and Spring
-            const fallCourse = {
-                id: `course-${Date.now()}-fall`,
-                name: courseName,
-                description: `${courseName} — overview of topics, projects, and key outcomes.`,
-                length: courseLength,
-                grade: courseGrade,
-                isFullYear: true
-            };
-
-            const springCourse = {
-                id: `course-${Date.now()}-spring`,
-                name: courseName,
-                description: `${courseName} — overview of topics, projects, and key outcomes.`,
-                length: courseLength,
-                grade: courseGrade,
-                isFullYear: true
-            };
-
-            this.coursePlanner[year]['Fall'].push(fallCourse);
-            this.coursePlanner[year]['Spring'].push(springCourse);
-            this.savePlannerData();
-            this.renderPlannerGrid();
-
-            this.showToast(`Added ${courseName} to ${year} Fall and Spring`, 'success');
-            return { success: true };
-        }
-
-        // Check if term is full (max 8 courses)
-        if (this.coursePlanner[year][term].length >= 8) {
+        if (term !== 'Full Year' && this.countSlots(this.coursePlanner[year][term]) >= 8) {
             return { success: false, message: `Your ${year} ${term} term is already full (8 courses maximum).` };
         }
+        if (term === 'Full Year') {
+            if (this.countSlots(this.coursePlanner[year]['Fall']) >= 8)
+                return { success: false, message: `Your ${year} Fall term is already full (8 courses maximum).` };
+            if (this.countSlots(this.coursePlanner[year]['Spring']) >= 8)
+                return { success: false, message: `Your ${year} Spring term is already full (8 courses maximum).` };
+        }
 
-        // Add the course (single semester)
-        const newCourse = {
-            id: `course-${Date.now()}`,
-            name: courseName,
-            description: `${courseName} — overview of topics, projects, and key outcomes.`,
-            length: courseLength,
-            grade: courseGrade,
-            isFullYear: false
-        };
+        // Look up backend courseId by name
+        const courseData = this.courseNames.find(c => c.title.toLowerCase() === courseName.toLowerCase());
+        const courseId = courseData?.id ?? null;
+        const yearLower = year.toLowerCase();
 
-        this.coursePlanner[year][term].push(newCourse);
-        this.savePlannerData();
-        this.renderPlannerGrid();
+        try {
+            if (courseId !== null) {
+                if (term === 'Full Year') {
+                    await this.plannerRequest('POST', '/add', { courseId, year: yearLower, semester: 'fall' });
+                    await this.plannerRequest('POST', '/add', { courseId, year: yearLower, semester: 'spring' });
+                } else {
+                    await this.plannerRequest('POST', '/add', { courseId, year: yearLower, semester: term.toLowerCase() });
+                }
+                await this.loadPlannerFromBackend();
+            } else {
+                // Fallback: local-only add when course not in backend catalogue
+                const ts = Date.now();
+                const placeInSparse = (arr, course, targetIdx = null) => {
+                    while (arr.length < 8) arr.push(null);
+                    if (targetIdx !== null && !arr[targetIdx]) {
+                        arr[targetIdx] = course;
+                    } else {
+                        const slot = arr.findIndex(s => !s);
+                        if (slot !== -1) arr[slot] = course;
+                    }
+                };
+                if (term === 'Full Year') {
+                    placeInSparse(this.coursePlanner[year]['Fall'], { id: `course-${ts}-fall`, name: courseName, description: '', length: courseLength, grade: courseGrade, isFullYear: true }, periodIdx);
+                    placeInSparse(this.coursePlanner[year]['Spring'], { id: `course-${ts}-spring`, name: courseName, description: '', length: courseLength, grade: courseGrade, isFullYear: true }, periodIdx);
+                } else {
+                    placeInSparse(this.coursePlanner[year][term], { id: `course-${ts}`, name: courseName, description: '', length: courseLength, grade: courseGrade, isFullYear: false }, periodIdx);
+                }
+                this.savePlannerData();
+                this.renderPlannerGrid();
+            }
 
-        this.showToast(`Added ${courseName} to ${year} ${term}`, 'success');
-        return { success: true };
+            const termLabel = term === 'Full Year' ? `${year} Fall and Spring` : `${year} ${term}`;
+            this.showToast(`Added ${courseName} to ${termLabel}`, 'success');
+            return { success: true };
+        } catch (err) {
+            return { success: false, message: err.message || 'Failed to add course.' };
+        }
     }
 
     renderPlannerGrid() {
-        const app = this; // Capture 'this' for event listeners
-
-        Object.entries(this.coursePlanner).forEach(([year, yearData]) => {
-            Object.entries(yearData).forEach(([term, courses]) => {
-                const slot = document.querySelector(`[data-year="${year}"][data-term="${term}"]`);
-                if (slot) {
-                    // Update slot content
-                    slot.innerHTML = courses.map(course => `
-                        <div class="course-item${course.isFullYear ? ' full-year-course' : ''}" draggable="${!course.isFullYear}" id="${course.id}" 
-                             data-year="${year}" data-term="${term}">
-                            <span class="course-name">
-                                ${course.name}
-                                ${!course.isFullYear && course.length === 'SM' ? '<span class="semester-badge">Semester</span>' : ''}
-                            </span>
-                            <button class="remove-course" onclick="window.app.removeCourse('${course.id}', '${year}', '${term}')">×</button>
-                        </div>
-                    `).join('');
-
-                    // Add Drop Listeners to Slot
-                    slot.addEventListener('dragover', (e) => app.handleDragOver(e));
-                    slot.addEventListener('dragleave', (e) => app.handleDragLeave(e));
-                    slot.addEventListener('drop', (e) => app.handleDrop(e, year, term));
-
-                    // Add Drag Listeners to Items (after they are in DOM)
-                    slot.querySelectorAll('.course-item').forEach(item => {
-                        item.addEventListener('dragstart', (e) => {
-                            app.handleDragStart(e, item.id, year, term);
-                        });
-                        item.addEventListener('dragend', (e) => {
-                            app.handleDragEnd(e);
-                        });
-                    });
-                }
-            });
-        });
+        this.renderYearView();
     }
 
-    removeCourse(courseId, year, term) {
-        // Find the course to check if it's a full year course
-        const course = this.coursePlanner[year][term].find(c => c.id === courseId);
-        
-        if (course && course.isFullYear) {
-            // Remove from both Fall and Spring
-            const courseName = course.name;
-            this.coursePlanner[year]['Fall'] = this.coursePlanner[year]['Fall'].filter(c => c.name !== courseName);
-            this.coursePlanner[year]['Spring'] = this.coursePlanner[year]['Spring'].filter(c => c.name !== courseName);
-            this.savePlannerData();
-            this.renderPlannerGrid();
-            this.showToast(`Removed full year course: ${courseName}`, 'success');
-        } else {
-            // Remove only from the specified term
-            this.coursePlanner[year][term] = this.coursePlanner[year][term].filter(course => course.id !== courseId);
-            this.savePlannerData();
-            this.renderPlannerGrid();
-            this.showToast('Course removed', 'success');
+    renderYearView() {
+        const container = document.getElementById('planner-year-content');
+        if (!container) return;
+
+        const year = this.activeYear;
+        const fallCourses = this.coursePlanner[year]?.Fall || [];
+        const springCourses = this.coursePlanner[year]?.Spring || [];
+
+        const addBtn = (term, idx) =>
+            `<button class="add-period-btn" onclick="window.app.openAddCourseModal('${year}', '${term}', ${idx})">+</button>`;
+
+        const rows = Array.from({ length: 8 }, (_, i) => {
+            const period = i + 1;
+            const fallCourse = fallCourses[i];
+            const springCourse = springCourses[i];
+            const isFullYear = fallCourse && fallCourse.isFullYear;
+
+            // Full-year course — one wide bar
+            if (isFullYear) {
+                return `
+                    <div class="period-row">
+                        <span class="period-number">${period}</span>
+                        <div class="period-courses">
+                            <div class="course-card full-year"
+                                 data-course-id="${fallCourse.id}" data-year="${year}"
+                                 data-term="Fall" data-period-idx="${i}"
+                                 draggable="true">
+                                <span class="course-card-name">${fallCourse.name}</span>
+                                <button class="remove-course" onclick="window.app.removeCourse('${fallCourse.id}', '${year}', 'Fall')">×</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // Both semester courses present — split 50/50
+            if (fallCourse && springCourse) {
+                return `
+                    <div class="period-row">
+                        <span class="period-number">${period}</span>
+                        <div class="period-courses">
+                            <div class="course-card semester fall-card"
+                                    data-course-id="${fallCourse.id}" data-year="${year}"
+                                    data-term="Fall" data-period-idx="${i}" draggable="true">
+                                <span class="course-card-name">${fallCourse.name}</span>
+                                <button class="remove-course" onclick="window.app.removeCourse('${fallCourse.id}', '${year}', 'Fall')">×</button>
+                            </div>
+                            <div class="course-card semester spring-card"
+                                    data-course-id="${springCourse.id}" data-year="${year}"
+                                    data-term="Spring" data-period-idx="${i}" draggable="true">
+                                <span class="course-card-name">${springCourse.name}</span>
+                                <button class="remove-course" onclick="window.app.removeCourse('${springCourse.id}', '${year}', 'Spring')">×</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // Only one semester course — show it full-width
+            if (fallCourse || springCourse) {
+                const course = fallCourse || springCourse;
+                const term = fallCourse ? 'Fall' : 'Spring';
+                const cls = fallCourse ? 'fall-card' : 'spring-card';
+                return `
+                    <div class="period-row">
+                        <span class="period-number">${period}</span>
+                        <div class="period-courses">
+                            <div class="course-card ${cls}"
+                                    data-course-id="${course.id}" data-year="${year}"
+                                    data-term="${term}" data-period-idx="${i}" draggable="true">
+                                <span class="course-card-name">${course.name}</span>
+                                <button class="remove-course" onclick="window.app.removeCourse('${course.id}', '${year}', '${term}')">×</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            // Empty period — single full-width slot with + button
+            return `
+                <div class="period-row">
+                    <span class="period-number">${period}</span>
+                    <div class="period-courses">
+                        <div class="empty-slot" data-term="Fall" data-period-idx="${i}">
+                            ${addBtn('Fall', i)}
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        container.innerHTML = rows.join('');
+    }
+
+    async removeCourse(courseId, year, term) {
+        const course = this.coursePlanner[year][term].find(c => c && c.id === courseId);
+        if (!course) return;
+
+        const yearLower = year.toLowerCase();
+
+        try {
+            if (course.courseId != null) {
+                if (course.isFullYear) {
+                    await this.plannerRequest('DELETE', '/remove', { courseId: course.courseId, year: yearLower, semester: 'fall' });
+                    await this.plannerRequest('DELETE', '/remove', { courseId: course.courseId, year: yearLower, semester: 'spring' });
+                } else {
+                    await this.plannerRequest('DELETE', '/remove', { courseId: course.courseId, year: yearLower, semester: term.toLowerCase() });
+                }
+                await this.loadPlannerFromBackend();
+            } else {
+                // Local-only fallback — null the slot to preserve sparse positions
+                if (course.isFullYear) {
+                    const name = course.name;
+                    ['Fall', 'Spring'].forEach(t => {
+                        const idx = this.coursePlanner[year][t].findIndex(c => c && c.name === name);
+                        if (idx !== -1) this.coursePlanner[year][t][idx] = null;
+                    });
+                } else {
+                    const idx = this.coursePlanner[year][term].findIndex(c => c && c.id === courseId);
+                    if (idx !== -1) this.coursePlanner[year][term][idx] = null;
+                }
+                this.savePlannerData();
+                this.renderPlannerGrid();
+            }
+            this.showToast(course.isFullYear ? `Removed full year course: ${course.name}` : 'Course removed', 'success');
+        } catch (err) {
+            this.showToast(err.message || 'Failed to remove course.', 'error');
         }
     }
 
     savePlannerData() {
         localStorage.setItem('coursePlanner', JSON.stringify(this.coursePlanner));
+    }
+
+    async plannerRequest(method, endpoint, body = null) {
+        const token = localStorage.getItem('authToken');
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        };
+        if (body) options.body = JSON.stringify(body);
+        const response = await fetch(`${this.apiBaseUrl}/api/planner${endpoint}`, options);
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || `Planner request failed (${response.status})`);
+        }
+        return response.status === 204 ? null : response.json();
+    }
+
+    async loadPlannerFromBackend() {
+        try {
+            const result = await this.plannerRequest('GET', '');
+            // Unwrap { success, data } envelope if present
+            const data = (result && result.success !== undefined) ? result.data : result;
+            const yearMap = { freshman: 'Freshman', sophomore: 'Sophomore', junior: 'Junior', senior: 'Senior' };
+            const termMap = { fall: 'Fall', spring: 'Spring' };
+
+            for (const [yearKey, yearData] of Object.entries(data)) {
+                const year = yearMap[yearKey];
+                if (!year || !this.coursePlanner[year]) continue;
+                for (const [termKey, courses] of Object.entries(yearData)) {
+                    const term = termMap[termKey];
+                    if (!term) continue;
+                    const dense = (courses || []).map(c => ({
+                        id: `course-${c.id}`,
+                        courseId: c.id,
+                        name: c.title || c.name,
+                        description: c.description || '',
+                        length: c.length || 'SM',
+                        grade: c.grade || '',
+                        isFullYear: false
+                    }));
+                    this.coursePlanner[year][term] = this.toSparseArray(dense);
+                }
+
+                // Detect full-year courses: same courseId in both Fall and Spring
+                const fallIds = new Set(this.coursePlanner[year].Fall.filter(Boolean).map(c => c.courseId));
+                const springIds = new Set(this.coursePlanner[year].Spring.filter(Boolean).map(c => c.courseId));
+                const fullYearIds = new Set([...fallIds].filter(id => springIds.has(id)));
+
+                if (fullYearIds.size > 0) {
+                    this.coursePlanner[year].Fall = this.coursePlanner[year].Fall.map(c =>
+                        c && fullYearIds.has(c.courseId) ? { ...c, isFullYear: true } : c
+                    );
+                    this.coursePlanner[year].Spring = this.coursePlanner[year].Spring.map(c =>
+                        c && fullYearIds.has(c.courseId) ? null : c
+                    );
+                }
+            }
+            this.savePlannerData();
+        } catch (err) {
+            console.warn('Could not load planner from backend, using local cache:', err);
+            const saved = localStorage.getItem('coursePlanner');
+            if (saved) {
+                this.coursePlanner = JSON.parse(saved);
+                // Normalize any legacy dense arrays to sparse length-8
+                for (const yearData of Object.values(this.coursePlanner)) {
+                    for (const termKey of ['Fall', 'Spring']) {
+                        if (yearData[termKey] && yearData[termKey].length !== 8) {
+                            yearData[termKey] = this.toSparseArray(yearData[termKey].filter(Boolean));
+                        }
+                    }
+                }
+            }
+        }
+        this.renderPlannerGrid();
     }
 
     async handleGoogleSignIn(googleUser) {
@@ -1993,17 +2253,24 @@ function logout() {
     window.app.logout();
 }
 
-function clearPlanner() {
+async function clearPlanner() {
     if (confirm('Are you sure you want to clear your entire course plan?')) {
-        window.app.coursePlanner = {
+        const empty = {
             Freshman: { Fall: [], Spring: [] },
             Sophomore: { Fall: [], Spring: [] },
             Junior: { Fall: [], Spring: [] },
             Senior: { Fall: [], Spring: [] }
         };
+        window.app.coursePlanner = empty;
         window.app.savePlannerData();
         window.app.renderPlannerGrid();
         window.app.showToast('Course plan cleared', 'success');
+
+        try {
+            await window.app.plannerRequest('DELETE', '/reset');
+        } catch (err) {
+            console.warn('Failed to reset planner on backend:', err);
+        }
     }
 }
 

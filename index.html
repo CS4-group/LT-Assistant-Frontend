@@ -180,62 +180,13 @@
 
             <div class="planner-content">
                 <div class="planner-grid">
-                    <div class="year-section" data-year="Freshman">
-                        <h3 class="year-title">Freshman Year</h3>
-                        <div class="terms-container">
-                            <div class="term-section" data-term="Fall">
-                                <h4>Fall</h4>
-                                <div class="course-slot" data-year="Freshman" data-term="Fall">
-                                </div>
-                            </div>
-                            <div class="term-section" data-term="Spring">
-                                <h4>Spring</h4>
-                                <div class="course-slot" data-year="Freshman" data-term="Spring">
-                                </div>
-                            </div>
-                        </div>
+                    <div class="planner-tabs">
+                        <button class="planner-tab active" data-year="Freshman">9th</button>
+                        <button class="planner-tab" data-year="Sophomore">10th</button>
+                        <button class="planner-tab" data-year="Junior">11th</button>
+                        <button class="planner-tab" data-year="Senior">12th</button>
                     </div>
-
-                    <div class="year-section" data-year="Sophomore">
-                        <h3 class="year-title">Sophomore Year</h3>
-                        <div class="terms-container">
-                            <div class="term-section" data-term="Fall">
-                                <h4>Fall</h4>
-                                <div class="course-slot" data-year="Sophomore" data-term="Fall"></div>
-                            </div>
-                            <div class="term-section" data-term="Spring">
-                                <h4>Spring</h4>
-                                <div class="course-slot" data-year="Sophomore" data-term="Spring"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="year-section" data-year="Junior">
-                        <h3 class="year-title">Junior Year</h3>
-                        <div class="terms-container">
-                            <div class="term-section" data-term="Fall">
-                                <h4>Fall</h4>
-                                <div class="course-slot" data-year="Junior" data-term="Fall"></div>
-                            </div>
-                            <div class="term-section" data-term="Spring">
-                                <h4>Spring</h4>
-                                <div class="course-slot" data-year="Junior" data-term="Spring"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="year-section" data-year="Senior">
-                        <h3 class="year-title">Senior Year</h3>
-                        <div class="terms-container">
-                            <div class="term-section" data-term="Fall">
-                                <h4>Fall</h4>
-                                <div class="course-slot" data-year="Senior" data-term="Fall"></div>
-                            </div>
-                            <div class="term-section" data-term="Spring">
-                                <h4>Spring</h4>
-                                <div class="course-slot" data-year="Senior" data-term="Spring"></div>
-                            </div>
-                        </div>
+                    <div class="planner-year-content" id="planner-year-content">
                     </div>
                 </div>
 
@@ -257,7 +208,7 @@
                             <div class="input-container">
                                 <input type="text" id="chatbot-input" class="chatbot-input"
                                     placeholder="Type your course request here..." />
-                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send</button>
+                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send <span class="send-arrow">→</span></button>
                             </div>
                         </div>
                     </div>
