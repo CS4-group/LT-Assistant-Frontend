@@ -1245,7 +1245,7 @@ body {
 .planner-year-content {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 2.2rem;
     padding: 1rem;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
@@ -1355,7 +1355,7 @@ body {
 /* Empty slots */
 .empty-half {
     flex: 1;
-    border: 2px dashed #000;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: var(--border-radius);
     min-height: 3.4rem;
     height: 3.4rem;
@@ -1363,7 +1363,7 @@ body {
 
 .empty-slot {
     flex: 1;
-    border: 2px dashed #000;
+    border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: var(--border-radius);
     min-height: 3.4rem;
     height: 3.4rem;
@@ -1395,9 +1395,10 @@ body {
     padding: 0;
     transition: transform 0.15s;
     user-select: none;
+    pointer-events: none;
 }
 
-.add-period-btn:hover {
+.empty-slot:hover .add-period-btn {
     transform: scale(1.2);
 }
 

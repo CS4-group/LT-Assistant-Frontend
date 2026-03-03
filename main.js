@@ -1809,8 +1809,7 @@ class App {
         const fallCourses = this.coursePlanner[year]?.Fall || [];
         const springCourses = this.coursePlanner[year]?.Spring || [];
 
-        const addBtn = (term, idx) =>
-            `<button class="add-period-btn" onclick="window.app.openAddCourseModal('${year}', '${term}', ${idx})">+</button>`;
+        const addBtn = () => `<button class="add-period-btn" tabindex="-1">+</button>`;
 
         const rows = Array.from({ length: 8 }, (_, i) => {
             const period = i + 1;
@@ -1881,8 +1880,9 @@ class App {
                 <div class="period-row">
                     <span class="period-number">${period}</span>
                     <div class="period-courses">
-                        <div class="empty-slot" data-term="Fall" data-period-idx="${i}">
-                            ${addBtn('Fall', i)}
+                        <div class="empty-slot" data-term="Fall" data-period-idx="${i}"
+                             onclick="window.app.openAddCourseModal('${year}', 'Fall', ${i})">
+                            ${addBtn()}
                         </div>
                     </div>
                 </div>`;
