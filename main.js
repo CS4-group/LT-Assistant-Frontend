@@ -1661,7 +1661,13 @@ class App {
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.innerHTML = message; // Use innerHTML directly as message might contain HTML tags
+
+        // Use marked.parse if available (for markdown formatting), otherwise fallback to innerHTML
+        if (typeof marked !== 'undefined' && marked.parse) {
+            contentDiv.innerHTML = marked.parse(message);
+        } else {
+            contentDiv.innerHTML = message;
+        }
 
         messageDiv.appendChild(avatarDiv);
         messageDiv.appendChild(contentDiv);
