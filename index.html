@@ -14,6 +14,26 @@
     <div id="app">
     </div>
 
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+
     <!-- Login page -->
     <template id="login-template">
         <div class="page-container login-page">
@@ -38,18 +58,12 @@
                         <div class="card-content">
                             <div class="google-signin-container">
                                 <div id="g_id_onload"
-                                     data-client_id="1076207663943-9urdbi6g6fbnblt45kbdr6h3tn32p653.apps.googleusercontent.com"
-                                     data-callback="handleGoogleSignIn"
-                                     data-auto_prompt="false">
+                                    data-client_id="1076207663943-9urdbi6g6fbnblt45kbdr6h3tn32p653.apps.googleusercontent.com"
+                                    data-callback="handleGoogleSignIn" data-auto_prompt="false">
                                 </div>
-                                <div class="g_id_signin"
-                                     data-type="standard"
-                                     data-size="large"
-                                     data-theme="outline"
-                                     data-text="sign_in_with"
-                                     data-shape="rectangular"
-                                     data-logo_alignment="left"
-                                     data-width="350">
+                                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline"
+                                    data-text="sign_in_with" data-shape="rectangular" data-logo_alignment="left"
+                                    data-width="350">
                                 </div>
                             </div>
                             <div class="signin-loading hidden" id="signin-loading">
@@ -126,7 +140,8 @@
                     </div>
                     <div class="header-right">
                         <button class="btn btn-floating" onclick="navigateTo('/')">← Back</button>
-                        <button class="btn btn-floating btn-floating-primary" id="header-add-review-btn" disabled>+ Add Review</button>
+                        <button class="btn btn-floating btn-floating-primary" id="header-add-review-btn" disabled>+ Add
+                            Review</button>
                     </div>
                 </div>
                 <div class="rating-controls-row">
@@ -208,7 +223,8 @@
                             <div class="input-container">
                                 <input type="text" id="chatbot-input" class="chatbot-input"
                                     placeholder="Type your course request here..." />
-                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send <span class="send-arrow">→</span></button>
+                                <button id="chatbot-send" class="btn btn-primary chatbot-send-btn">Send <span
+                                        class="send-arrow">→</span></button>
                             </div>
                         </div>
                     </div>
@@ -333,30 +349,37 @@
                     <!-- Step 4: Academic Interests -->
                     <div class="onboarding-step" data-step="4">
                         <h2 class="step-title">What subjects interest you most?</h2>
-                        <p class="step-subtitle">Select all that apply — your AI assistant will use these to guide recommendations.</p>
+                        <p class="step-subtitle">Select all that apply — your AI assistant will use these to guide
+                            recommendations.</p>
                         <div class="option-grid option-grid-3">
                             <button class="option-card multi-select" data-field="academicInterests" data-value="Math">
                                 <span class="option-label">Math</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="Science">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="Science">
                                 <span class="option-label">Science</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="English/Literature">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="English/Literature">
                                 <span class="option-label">English / Literature</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="History">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="History">
                                 <span class="option-label">History</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="Computer Science">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="Computer Science">
                                 <span class="option-label">Computer Science</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="Foreign Languages">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="Foreign Languages">
                                 <span class="option-label">Foreign Languages</span>
                             </button>
                             <button class="option-card multi-select" data-field="academicInterests" data-value="Arts">
                                 <span class="option-label">Arts</span>
                             </button>
-                            <button class="option-card multi-select" data-field="academicInterests" data-value="Social Studies">
+                            <button class="option-card multi-select" data-field="academicInterests"
+                                data-value="Social Studies">
                                 <span class="option-label">Social Studies</span>
                             </button>
                         </div>

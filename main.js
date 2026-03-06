@@ -17,6 +17,9 @@ class App {
         // Check authentication status from localStorage
         this.isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
 
+        // Initialize Theme Mode
+        this.initTheme();
+
         // Set up initial routing
         this.handleRouting();
 
@@ -25,6 +28,36 @@ class App {
 
         // Set up form handlers
         this.setupEventListeners();
+    }
+
+    // Theme Management
+    initTheme() {
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        // Check for saved user preference, else use system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+        if (initialTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+        }
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        }
     }
 
     // API Helper Functions
@@ -350,17 +383,17 @@ class App {
     setupLoginHandlers() {
         // Re-initialize Google Sign-In button
         const googleButtonContainer = document.querySelector('.g_id_signin');
-        
+
         if (googleButtonContainer && window.google) {
             // Clear any existing button
             googleButtonContainer.innerHTML = '';
-            
+
             // Re-render the Google Sign-In button
             window.google.accounts.id.initialize({
                 client_id: '1076207663943-9urdbi6g6fbnblt45kbdr6h3tn32p653.apps.googleusercontent.com',
                 callback: handleGoogleSignIn
             });
-            
+
             window.google.accounts.id.renderButton(
                 googleButtonContainer,
                 {
@@ -773,16 +806,16 @@ class App {
         if (course.grade) {
             // Parse all grades (handles "9, 10" format)
             const gradeNums = course.grade.split(',').map(g => parseInt(g.trim())).filter(g => !isNaN(g));
-            
+
             const yearGradeMap = {
                 'Freshman': 9,
                 'Sophomore': 10,
                 'Junior': 11,
                 'Senior': 12
             };
-            
+
             const targetGrade = yearGradeMap[targetYear];
-            
+
             // Check if the target year matches ANY of the allowed grades
             if (gradeNums.length > 0 && !gradeNums.includes(targetGrade)) {
                 const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
@@ -936,7 +969,7 @@ class App {
                     descBox.innerHTML = `<p>${courseDetails.description}</p>`;
                     selectedCourseLength = courseDetails.length || 'SM';
                     selectedCourseGrade = courseDetails.grade || '';
-                    
+
                     // Auto-select "Full Year" if course is a year-long course
                     const termSelect = document.getElementById('term-select');
                     if (selectedCourseLength === 'YR' && termSelect) {
@@ -945,10 +978,10 @@ class App {
                         // If it's a semester course and Full Year is selected, change to Fall
                         termSelect.value = 'Fall';
                     }
-                    
+
                     const lengthText = selectedCourseLength === 'YR' ? 'Full Year' : 'Semester';
                     const gradeText = selectedCourseGrade ? `Grade: ${selectedCourseGrade}` : '';
-                    
+
                     infoBox.innerHTML = `<p><strong>${lengthText}</strong>${gradeText ? ` | <strong>${gradeText}</strong>` : ''}</p>`;
                 } else {
                     descBox.innerHTML = '<p class="text-muted">Failed to load description</p>';
@@ -1002,16 +1035,16 @@ class App {
             if (selectedCourseGrade) {
                 // Parse all grades (handles "9, 10" format)
                 const gradeNums = selectedCourseGrade.split(',').map(g => parseInt(g.trim())).filter(g => !isNaN(g));
-                
+
                 const yearGradeMap = {
                     'Freshman': 9,
                     'Sophomore': 10,
                     'Junior': 11,
                     'Senior': 12
                 };
-                
+
                 const expectedGrade = yearGradeMap[year];
-                
+
                 // Check if the selected year matches ANY of the allowed grades
                 if (gradeNums.length > 0 && !gradeNums.includes(expectedGrade)) {
                     const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
@@ -1684,7 +1717,7 @@ class App {
             // Call backend Gemini API endpoint
             const response = await fetch(`${this.apiBaseUrl}/api/chatbot`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -1717,7 +1750,7 @@ class App {
         } catch (error) {
             this.hideTypingIndicator();
             console.error('Chatbot API error:', error);
-            
+
             // User-friendly error message
             this.addChatMessage('⚠️ Sorry, I encountered an error connecting to the AI assistant. Please try again in a moment.', 'bot');
         }
@@ -2011,7 +2044,7 @@ class App {
     async handleGoogleSignIn(googleUser) {
         const loadingEl = document.getElementById('signin-loading');
         const googleBtnContainer = document.querySelector('.google-signin-container');
-        
+
         // Show loading state
         if (loadingEl && googleBtnContainer) {
             googleBtnContainer.classList.add('hidden');
@@ -2021,10 +2054,10 @@ class App {
         try {
             // Get the ID token from Google
             const idToken = googleUser.credential;
-            
+
             // TODO: Replace with your actual backend API endpoint
             const API_URL = 'http://localhost:3000/api/auth/google';
-            
+
             // Send token to backend for verification
             const response = await fetch(API_URL, {
                 method: 'POST',
@@ -2039,7 +2072,7 @@ class App {
             }
 
             const data = await response.json();
-            
+
             // Store authentication data
             this.isAuthenticated = true;
             localStorage.setItem('isLoggedIn', 'true');
@@ -2058,11 +2091,11 @@ class App {
                 this.navigateTo('/');
                 this.showToast(`Welcome back, ${data.user.name}!`, 'success');
             }
-            
+
         } catch (error) {
             console.error('Login error:', error);
             this.showToast('Login failed. Please try again.', 'error');
-            
+
             // Reset UI
             if (loadingEl && googleBtnContainer) {
                 loadingEl.classList.add('hidden');
