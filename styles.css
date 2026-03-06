@@ -507,6 +507,10 @@ body {
     filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.1));
 }
 
+.login-header .logo {
+    filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.6));
+}
+
 .app-title-large {
     font-family: Trebuchet MS, sans-serif;
     font-size: 3rem;
@@ -1423,7 +1427,7 @@ body {
 /* Empty slots */
 .empty-half {
     flex: 1;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px dashed var(--border-color);
     border-radius: var(--border-radius);
     min-height: 3.4rem;
     height: 3.4rem;
@@ -1431,7 +1435,7 @@ body {
 
 .empty-slot {
     flex: 1;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px dashed var(--border-color);
     border-radius: var(--border-radius);
     min-height: 3.4rem;
     height: 3.4rem;
@@ -1443,8 +1447,8 @@ body {
 }
 
 .empty-slot:hover {
-    border-color: #000;
-    background-color: rgba(0, 0, 0, 0.04);
+    border-color: var(--text-main);
+    background-color: var(--card-hover-bg);
 }
 
 .empty-slot.drag-over {
@@ -1457,7 +1461,7 @@ body {
     border: none;
     font-size: 1.6rem;
     font-weight: 300;
-    color: #000;
+    color: var(--text-muted);
     cursor: pointer;
     line-height: 1;
     padding: 0;
@@ -1468,6 +1472,7 @@ body {
 
 .empty-slot:hover .add-period-btn {
     transform: scale(1.2);
+    color: var(--text-main);
 }
 
 .add-course-btn-expanded {
@@ -2024,7 +2029,8 @@ body {
 }
 
 .modal-content {
-    background-color: var(--white);
+    background-color: var(--content-bg);
+    backdrop-filter: blur(12px);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-lg);
     width: 90%;
@@ -2048,7 +2054,7 @@ body {
 
 .modal-header {
     padding: 1.5rem;
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -2058,14 +2064,14 @@ body {
     margin: 0;
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--gray-900);
+    color: var(--text-main);
 }
 
 .modal-close {
     background: none;
     border: none;
     font-size: 2rem;
-    color: var(--gray-400);
+    color: var(--text-muted);
     cursor: pointer;
     padding: 0;
     width: 2rem;
@@ -2078,8 +2084,8 @@ body {
 }
 
 .modal-close:hover {
-    background-color: var(--gray-100);
-    color: var(--gray-700);
+    background-color: var(--card-hover-bg);
+    color: var(--text-main);
 }
 
 .modal-body {
@@ -2087,8 +2093,9 @@ body {
 }
 
 .modal-body .form-input {
-    background-color: var(--white) !important;
-    border: 1px solid var(--gray-300) !important;
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
 }
 
 .modal-body .form-input:focus {
@@ -2097,21 +2104,21 @@ body {
 
 .modal-footer {
     padding: 1.5rem;
-    border-top: 1px solid var(--gray-200);
+    border-top: 1px solid var(--border-color);
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
 }
 
 .modal-footer .btn-outline {
-    background-color: var(--white) !important;
-    color: var(--gray-700) !important;
-    border-color: var(--gray-300) !important;
+    background-color: var(--content-bg) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
 }
 
 .modal-footer .btn-outline:hover {
-    background-color: var(--gray-50) !important;
-    color: var(--gray-700) !important;
+    background-color: var(--card-hover-bg) !important;
+    color: var(--text-main) !important;
 }
 
 .modal-footer .btn-primary {
@@ -2127,8 +2134,8 @@ body {
 }
 
 .course-description-box {
-    background-color: var(--gray-50);
-    border: 1px solid var(--gray-200);
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 1rem;
     min-height: 100px;
@@ -2138,12 +2145,12 @@ body {
 
 .course-description-box p {
     margin: 0;
-    color: var(--gray-700);
+    color: var(--text-main);
     line-height: 1.6;
 }
 
 .text-muted {
-    color: var(--gray-500);
+    color: var(--text-muted);
     font-style: italic;
 }
 
