@@ -736,58 +736,6 @@ class App {
         this.renderYearView();
     }
 
-    handleDragStart(e, courseId, sourceYear, sourceTerm) {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-            courseId,
-            sourceYear,
-            sourceTerm
-        }));
-        e.target.classList.add('dragging');
-    }
-
-    handleDragEnd(e) {
-        e.target.classList.remove('dragging');
-        document.querySelectorAll('.course-slot.drag-over').forEach(el => {
-            el.classList.remove('drag-over');
-        });
-    }
-
-    handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault(); // Necessary. Allows us to drop.
-        }
-        e.dataTransfer.dropEffect = 'move';
-        e.currentTarget.classList.add('drag-over');
-        return false;
-    }
-
-    handleDragLeave(e) {
-        e.currentTarget.classList.remove('drag-over');
-    }
-
-    handleDrop(e, targetYear, targetTerm) {
-        if (e.stopPropagation) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-        }
-        e.currentTarget.classList.remove('drag-over');
-
-        const dataStr = e.dataTransfer.getData('text/plain');
-        if (!dataStr) return false;
-
-        const data = JSON.parse(dataStr);
-        const { courseId, sourceYear, sourceTerm } = data;
-
-        // Prevent dropping in the exact same spot effectively doing nothing
-        if (sourceYear === targetYear && sourceTerm === targetTerm) {
-            return false;
-        }
-
-        // Logic to move the course
-        this.moveCourse(courseId, sourceYear, sourceTerm, targetYear, targetTerm);
-        return false;
-    }
-
     moveCourse(courseId, sourceYear, sourceTerm, targetYear, targetTerm) {
         const sourceCourses = this.coursePlanner[sourceYear][sourceTerm];
         const courseIndex = sourceCourses.findIndex(c => c && c.id === courseId);
@@ -804,7 +752,6 @@ class App {
 
         // Validate grade level against target year
         if (course.grade) {
-            // Parse all grades (handles "9, 10" format)
             const gradeNums = course.grade.split(',').map(g => parseInt(g.trim())).filter(g => !isNaN(g));
 
             const yearGradeMap = {
@@ -816,7 +763,6 @@ class App {
 
             const targetGrade = yearGradeMap[targetYear];
 
-            // Check if the target year matches ANY of the allowed grades
             if (gradeNums.length > 0 && !gradeNums.includes(targetGrade)) {
                 const gradeYearMap = { 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior' };
                 const allowedYears = gradeNums.map(g => gradeYearMap[g] || `Grade ${g}`).join(' or ');
@@ -1227,7 +1173,6 @@ class App {
             }
         }
 
-        // Fetch reviews from backend API
         // Fetch reviews from backend API
         let reviews = await this.fetchReviews(entityType, this.selectedItemId);
 
@@ -1661,13 +1606,7 @@ class App {
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-
-        // Use marked.parse if available (for markdown formatting), otherwise fallback to innerHTML
-        if (typeof marked !== 'undefined' && marked.parse) {
-            contentDiv.innerHTML = marked.parse(message);
-        } else {
-            contentDiv.innerHTML = message;
-        }
+        contentDiv.innerHTML = message; // Use innerHTML directly as message might contain HTML tags
 
         messageDiv.appendChild(avatarDiv);
         messageDiv.appendChild(contentDiv);
@@ -2324,11 +2263,3 @@ function handleGoogleSignIn(googleUser) {
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
-
-// Mock data for features not yet integrated with backend
-window.mockData = {
-    reviews: [
-        // Reviews can be associated with any item by itemId
-        // For courses, clubs, and teachers, use the item ID from the API
-    ]
-};
