@@ -2419,11 +2419,16 @@ body {
     border: 1.5px solid rgba(209, 213, 219, 0.5);
     border-radius: 2rem;
     font-size: 0.825rem;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: var(--gray-600);
+    background-color: var(--input-bg);
+    color: var(--text-main);
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 500;
+}
+
+.sort-select option {
+    background-color: var(--content-bg);
+    color: var(--text-main);
 }
 
 .sort-select:hover {
