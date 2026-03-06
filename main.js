@@ -1174,7 +1174,20 @@ class App {
         }
 
         // Fetch reviews from backend API
-        let reviews = await this.fetchReviews(entityType, this.selectedItemId);
+        const allReviews = await this.fetchReviews(entityType, this.selectedItemId);
+
+        // Compute average rating from the full (unfiltered) set
+        let avgRating = 0;
+        let totalReviews = allReviews.length;
+        if (totalReviews > 0) {
+            avgRating = (allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1);
+        } else if (item.averageRating) {
+            avgRating = parseFloat(item.averageRating).toFixed(1);
+            totalReviews = item.reviewCount || 0;
+        }
+
+        // Apply filter on a copy so the unfiltered set stays intact
+        let reviews = [...allReviews];
 
         // Filter reviews based on current preference
         if (this.reviewFilterRating !== 'all') {
@@ -1195,6 +1208,10 @@ class App {
 
         itemDetails.innerHTML = `
             <h2>${item.title}</h2>
+            <div class="rating-display-container">
+                <div class="rating-display-number"><span class="animated-rating" data-target="${avgRating}">0.0</span><span class="rating-max"> / 5.0</span></div>
+                <div class="rating-count">(${totalReviews} review${totalReviews !== 1 ? 's' : ''})</div>
+            </div>
             <h3>Description</h3>
             <p>${item.description}</p>
             ${additionalInfo}
@@ -1245,6 +1262,29 @@ class App {
             }
             </div>
         `;
+
+        // Animate the average rating counter from 0.0 → target
+        const ratingEl = itemDetails.querySelector('.animated-rating');
+        if (ratingEl) {
+            const target = parseFloat(ratingEl.getAttribute('data-target')) || 0;
+            if (target > 0) {
+                let frameCount = 0;
+                const totalFrames = 45;
+                const animateCounter = () => {
+                    frameCount++;
+                    const progress = frameCount / totalFrames;
+                    // ease-out curve
+                    const eased = 1 - Math.pow(1 - progress, 3);
+                    if (frameCount >= totalFrames) {
+                        ratingEl.textContent = target.toFixed(1);
+                    } else {
+                        ratingEl.textContent = (target * eased).toFixed(1);
+                        requestAnimationFrame(animateCounter);
+                    }
+                };
+                requestAnimationFrame(animateCounter);
+            }
+        }
     }
 
     handleFilterChange(rating) {
