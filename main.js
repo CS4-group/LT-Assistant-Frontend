@@ -826,9 +826,15 @@ class App {
         // Create modal overlay
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+
+        const closeModal = () => {
+            modal.classList.add('closing');
+            setTimeout(() => modal.remove(), 300);
+        };
+
         modal.onclick = (e) => {
             if (e.target === modal) {
-                modal.remove();
+                closeModal();
             }
         };
 
@@ -841,8 +847,9 @@ class App {
         modalHeader.className = 'modal-header';
         modalHeader.innerHTML = `
             <h2>Add Course to ${year} Year</h2>
-            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <button class="modal-close">×</button>
         `;
+        modalHeader.querySelector('.modal-close').onclick = closeModal;
 
         // Modal body
         const modalBody = document.createElement('div');
@@ -953,7 +960,7 @@ class App {
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-outline';
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.onclick = () => modal.remove();
+        cancelBtn.onclick = closeModal;
 
         const addBtn = document.createElement('button');
         addBtn.className = 'btn btn-primary';
@@ -1004,7 +1011,7 @@ class App {
             if (selectedCourse) {
                 const result = await this.addCourseFromChatbot(selectedCourse.title, year, term, selectedCourseLength, selectedCourseGrade, periodIdx);
                 if (result.success) {
-                    modal.remove();
+                    closeModal();
                 } else {
                     this.showToast(result.message, 'error');
                 }
@@ -1206,10 +1213,19 @@ class App {
             additionalInfo = `<p><strong>Courses:</strong> ${item.courses.join(', ')}</p>`;
         }
 
+        let starDisplay = '';
+        if (totalReviews > 0) {
+            starDisplay = `<div class="rating-display-stars">☆☆☆☆☆</div>`;
+        }
+
         itemDetails.innerHTML = `
             <h2>${item.title}</h2>
             <div class="rating-display-container">
-                <div class="rating-display-number"><span class="animated-rating" data-target="${avgRating}">0.0</span><span class="rating-max"> / 5.0</span></div>
+                <div class="rating-number-wrapper">
+                    <div class="rating-display-number"><span class="animated-rating" data-target="${avgRating}">0.0</span></div>
+                </div>
+                <span class="rating-max"> / 5.0</span>
+                ${starDisplay}
                 <div class="rating-count">(${totalReviews} review${totalReviews !== 1 ? 's' : ''})</div>
             </div>
             <h3>Description</h3>
@@ -1263,26 +1279,41 @@ class App {
             </div>
         `;
 
-        // Animate the average rating counter from 0.0 → target
+        // Animate the average rating counter and stars from 0.0 → target
         const ratingEl = itemDetails.querySelector('.animated-rating');
+        const starsEl = itemDetails.querySelector('.rating-display-stars');
+
         if (ratingEl) {
             const target = parseFloat(ratingEl.getAttribute('data-target')) || 0;
             if (target > 0) {
-                let frameCount = 0;
-                const totalFrames = 45;
-                const animateCounter = () => {
-                    frameCount++;
-                    const progress = frameCount / totalFrames;
+                const duration = 1500; // ms
+                let startTime = null;
+                const animateCounter = (timestamp) => {
+                    if (!startTime) startTime = timestamp;
+                    const elapsed = timestamp - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
                     // ease-out curve
-                    const eased = 1 - Math.pow(1 - progress, 3);
-                    if (frameCount >= totalFrames) {
+                    const eased = 1 - Math.pow(1 - progress, 4);
+                    const currentRating = target * eased;
+
+                    if (progress >= 1) {
                         ratingEl.textContent = target.toFixed(1);
+                        if (starsEl) {
+                            const rounded = Math.round(target);
+                            starsEl.textContent = '★'.repeat(rounded) + '☆'.repeat(5 - rounded);
+                        }
                     } else {
-                        ratingEl.textContent = (target * eased).toFixed(1);
+                        ratingEl.textContent = currentRating.toFixed(1);
+                        if (starsEl) {
+                            const rounded = Math.round(currentRating);
+                            starsEl.textContent = '★'.repeat(rounded) + '☆'.repeat(5 - rounded);
+                        }
                         requestAnimationFrame(animateCounter);
                     }
                 };
                 requestAnimationFrame(animateCounter);
+            } else if (starsEl) {
+                starsEl.textContent = '☆☆☆☆☆';
             }
         }
     }
@@ -1324,9 +1355,15 @@ class App {
         // Create modal overlay
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+
+        const closeModal = () => {
+            modal.classList.add('closing');
+            setTimeout(() => modal.remove(), 300);
+        };
+
         modal.onclick = (e) => {
             if (e.target === modal) {
-                modal.remove();
+                closeModal();
             }
         };
 
@@ -1339,8 +1376,9 @@ class App {
         modalHeader.className = 'modal-header';
         modalHeader.innerHTML = `
             <h2>Add Review</h2>
-            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <button class="modal-close">×</button>
         `;
+        modalHeader.querySelector('.modal-close').onclick = closeModal;
 
         // Modal body
         const modalBody = document.createElement('div');
@@ -1408,7 +1446,7 @@ class App {
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'btn btn-outline';
         cancelBtn.textContent = 'Cancel';
-        cancelBtn.onclick = () => modal.remove();
+        cancelBtn.onclick = closeModal;
 
         const submitBtn = document.createElement('button');
         submitBtn.className = 'btn btn-primary';
@@ -1523,7 +1561,7 @@ class App {
                     await this.updateItemDetails();
                 }
 
-                modal.remove();
+                closeModal();
                 this.showToast('Review added successfully!', 'success');
             } catch (error) {
                 this.showToast(error.message || 'Failed to add review', 'error');
