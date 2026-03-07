@@ -14,9 +14,9 @@ body {
 }
 
 body * {
-    transition-property: background-color, border-color, color, box-shadow, transform, opacity, width, height, margin, padding;
-    transition-duration: 0.15s;
-    transition-timing-function: ease;
+    transition-property: background-color, border-color, color, opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: var(--ease-smooth);
 }
 
 body .bg-overlay,
@@ -53,8 +53,10 @@ body .course-card {
     --border-radius: 0.67rem;
     --border-radius-lg: 1rem;
     --transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    --transition-smooth: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --ease-spring-heavy: cubic-bezier(0.34, 1.8, 0.64, 1);
     --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
     --glass-bg: rgba(255, 255, 255, 0.65);
     --glass-border: 1px solid rgba(255, 255, 255, 0.5);
@@ -148,24 +150,27 @@ body .course-card {
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), background 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
     text-decoration: none;
     background: var(--white);
     color: var(--gray-700);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
     position: relative;
     letter-spacing: 0.01em;
+    will-change: transform, box-shadow;
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 .btn:hover:not(:disabled) {
-    transform: translateY(-2px);
+    transform: translate3d(0, -2px, 0) scale(1.02);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.97);
+    transform: translate3d(0, 0, 0) scale(0.97);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     transition-duration: 0.1s;
+    transition-timing-function: var(--ease-smooth);
 }
 
 .btn:disabled {
@@ -206,11 +211,22 @@ body .course-card {
     border-radius: 0.65rem;
     padding: 0.5rem 1.1rem;
     font-size: 0.85rem;
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), background 0.4s var(--ease-smooth);
+    will-change: transform, box-shadow;
+    transform: translate3d(0, 0, 0) scale(1);
+    cursor: pointer;
 }
 
 .btn-floating:hover:not(:disabled) {
     background: var(--card-hover-bg);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    transform: translate3d(0, -3px, 0) scale(1.03);
+}
+
+.btn-floating:active:not(:disabled) {
+    transform: translate3d(0, 0, 0) scale(0.96);
+    transition-duration: 0.1s;
+    transition-timing-function: var(--ease-smooth);
 }
 
 .btn-floating-primary {
@@ -218,18 +234,29 @@ body .course-card {
     color: var(--white);
     border: 1px solid rgba(196, 37, 37, 0.3);
     box-shadow: 0 2px 12px rgba(196, 37, 37, 0.2), 0 1px 3px rgba(196, 37, 37, 0.15);
-    transition: background 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), background 0.4s var(--ease-smooth), opacity 0.4s var(--ease-smooth);
+    will-change: transform, box-shadow;
+    transform: translate3d(0, 0, 0) scale(1);
 }
 
 .btn-floating-primary:hover:not(:disabled) {
     box-shadow: 0 6px 24px rgba(196, 37, 37, 0.3), 0 2px 8px rgba(196, 37, 37, 0.2);
     background: linear-gradient(135deg, #b02020, #c42525);
+    transform: translate3d(0, -3px, 0) scale(1.03);
+}
+
+.btn-floating-primary:active:not(:disabled) {
+    transform: translate3d(0, 0, 0) scale(0.96);
+    transition-duration: 0.1s;
+    transition-timing-function: var(--ease-smooth);
 }
 
 .btn-floating-primary:disabled {
     background: rgba(196, 37, 37, 0.35);
     border-color: transparent;
     color: rgba(255, 255, 255, 0.7);
+    transform: none;
+    box-shadow: none;
 }
 
 .rating-page .btn-outline,
@@ -594,25 +621,29 @@ body .course-card {
     gap: 1rem;
     font-size: 1.25rem;
     opacity: 1;
-    transform: scale(1) translateY(0);
-    animation: popInCard 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    transform: translate3d(0, 0, 0) scale(1);
     font-weight: 600;
     border-radius: var(--border-radius-lg);
     border: none;
     cursor: pointer;
-    transition: all 0.4s var(--ease-bounce);
+    animation: popInCard 0.8s var(--ease-spring-heavy) backwards;
+    transition: transform 0.6s var(--ease-spring-heavy), box-shadow 0.6s var(--ease-spring-heavy), background-color 0.4s ease, color 0.4s ease;
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
     background-color: var(--white);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
 .feature-card:hover {
-    transform: translateY(-8px) scale(1.07);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.16), 0 6px 16px rgba(0, 0, 0, 0.1);
+    transform: translate3d(0, -12px, 0) scale(1.08);
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.16), 0 8px 18px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card:active {
-    transform: translateY(-2px) scale(0.99);
-    transition-duration: 0.1s;
+    transform: translate3d(0, -2px, 0) scale(0.97);
+    transition-duration: 0.15s;
+    transition-timing-function: var(--ease-smooth);
 }
 
 .planner-card {
@@ -919,19 +950,20 @@ body .course-card {
     border-radius: var(--border-radius);
     cursor: pointer;
     font-size: 0.95rem;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), background-color 0.4s var(--ease-smooth), border-color 0.4s var(--ease-smooth);
     background-color: var(--card-bg);
     backdrop-filter: blur(8px);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     opacity: 0;
-    transform: translateX(-10px);
-    animation: cardSlideIn 0.45s var(--ease-bounce) forwards;
+    transform: translate3d(-10px, 0, 0);
+    will-change: transform, box-shadow, opacity;
+    animation: cardSlideIn 0.5s var(--ease-spring-heavy) forwards;
 }
 
 @keyframes cardSlideIn {
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
@@ -939,7 +971,7 @@ body .course-card {
     background-color: var(--card-hover-bg);
     border-color: rgba(196, 37, 37, 0.4);
     box-shadow: 0 4px 12px rgba(196, 37, 37, 0.08);
-    transform: translateX(4px);
+    transform: translate3d(4px, 0, 0);
 }
 
 .item-card.selected {
@@ -947,7 +979,7 @@ body .course-card {
     color: white;
     border: 1.5px solid #a01e1e;
     box-shadow: 0 4px 16px rgba(196, 37, 37, 0.25);
-    transform: translateX(4px);
+    transform: translate3d(4px, 0, 0);
 }
 
 .item-title {
@@ -1055,23 +1087,24 @@ body .course-card {
     margin-bottom: 0.75rem;
     border: 1px solid rgba(209, 213, 219, 0.35);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    transition: all 0.25s ease;
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), border-color 0.4s var(--ease-smooth);
     opacity: 0;
-    transform: translateY(8px);
-    animation: reviewSlideIn 0.45s var(--ease-bounce) forwards;
+    transform: translate3d(0, 8px, 0);
+    will-change: transform, box-shadow, opacity;
+    animation: reviewSlideIn 0.5s var(--ease-spring-heavy) forwards;
 }
 
 @keyframes reviewSlideIn {
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
 .review-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
     border-color: rgba(209, 213, 219, 0.6);
-    transform: translateY(-1px);
+    transform: translate3d(0, -2px, 0);
 }
 
 .review-header {
@@ -1406,8 +1439,10 @@ body .course-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: var(--transition-smooth);
-    animation: scaleIn 0.25s ease;
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), border-color 0.4s var(--ease-smooth), background-color 0.4s var(--ease-smooth);
+    animation: scaleIn 0.3s var(--ease-spring);
+    transform: translate3d(0, 0, 0) scale(1);
+    will-change: transform, box-shadow;
 }
 
 .course-card.full-year {
@@ -1428,8 +1463,9 @@ body .course-card {
 }
 
 .course-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: var(--primary-color);
+    transform: translate3d(0, -2px, 0) scale(1.02);
 }
 
 .course-card[draggable="true"] {
@@ -1573,12 +1609,12 @@ body .course-card {
 @keyframes popInCard {
     from {
         opacity: 0;
-        transform: scale(0.8) translateY(30px);
+        transform: translate3d(0, 30px, 0) scale(0.85);
     }
 
     to {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: translate3d(0, 0, 0) scale(1);
     }
 }
 

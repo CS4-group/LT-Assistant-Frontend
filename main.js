@@ -1222,7 +1222,7 @@ class App {
             <h2>${item.title}</h2>
             <div class="rating-display-container">
                 <div class="rating-number-wrapper">
-                    <div class="rating-display-number"><span class="animated-rating" data-target="${avgRating}">0.0</span></div>
+                    <div class="rating-display-number"><span class="animated-rating" data-target="${avgRating}">${totalReviews > 0 ? '0.0' : '-.-'}</span></div>
                 </div>
                 <span class="rating-max"> / 5.0</span>
                 ${starDisplay}
