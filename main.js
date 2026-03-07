@@ -48,6 +48,7 @@ class App {
 
         if (themeToggleBtn) {
             themeToggleBtn.addEventListener('click', () => {
+                document.documentElement.classList.add('theme-transitioning');
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 if (currentTheme === 'dark') {
                     document.documentElement.removeAttribute('data-theme');
@@ -56,6 +57,7 @@ class App {
                     document.documentElement.setAttribute('data-theme', 'dark');
                     localStorage.setItem('theme', 'dark');
                 }
+                setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 500);
             });
         }
     }
@@ -633,12 +635,50 @@ class App {
     }
 
     setupPlannerTabs() {
+        const yearOrder = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+        this.isAnimatingPlanner = false;
         document.querySelectorAll('.planner-tab').forEach(tab => {
             tab.addEventListener('click', () => {
+                if (this.isAnimatingPlanner) return;
+                const oldYear = this.activeYear;
+                const newYear = tab.dataset.year;
+                if (oldYear === newYear) return;
+
+                const oldIndex = yearOrder.indexOf(oldYear);
+                const newIndex = yearOrder.indexOf(newYear);
+                this.slideDirection = newIndex > oldIndex ? 'right' : 'left';
+
                 document.querySelectorAll('.planner-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                this.activeYear = tab.dataset.year;
-                this.renderYearView();
+                this.activeYear = newYear;
+
+                const container = document.getElementById('planner-year-content');
+                if (container) {
+                    this.isAnimatingPlanner = true;
+                    // Lock height to strictly prevent flashing geometry
+                    const currentHeight = container.offsetHeight;
+                    container.style.height = `${currentHeight}px`;
+                    container.style.overflow = 'hidden';
+
+                    // Force reflow
+                    container.style.animation = 'none';
+                    void container.offsetHeight;
+
+                    if (this.slideDirection === 'right') {
+                        container.style.animation = 'scheduleSlideOutLeft 0.2s cubic-bezier(0.32, 0, 0.67, 0) both';
+                    } else {
+                        container.style.animation = 'scheduleSlideOutRight 0.2s cubic-bezier(0.32, 0, 0.67, 0) both';
+                    }
+
+                    setTimeout(() => {
+                        container.style.height = '';
+                        container.style.overflow = '';
+                        this.renderYearView();
+                        this.isAnimatingPlanner = false;
+                    }, 200);
+                } else {
+                    this.renderYearView();
+                }
             });
         });
     }
@@ -1105,7 +1145,7 @@ class App {
             const isSelected = String(this.selectedItemId) === String(item.id);
             const delay = Math.min(index * 0.04, 0.8); // stagger up to 800ms
             return `
-                <div class="item-card ${isSelected ? 'selected' : ''}" 
+                <div class="item-card ${isSelected ? 'selected' : ''}"
                      style="animation-delay: ${delay}s"
                      onclick="window.app.selectItem('${item.id}')">
                     <div class="item-title">${item.title}</div>
@@ -1430,7 +1470,7 @@ class App {
         descriptionSection.className = 'form-group';
         descriptionSection.innerHTML = `
             <label class="form-label">Your Review</label>
-            <textarea id="review-description" class="form-input review-textarea" 
+            <textarea id="review-description" class="form-input review-textarea"
                       placeholder="Share your experience with this ${itemTypePlural}..." rows="5"></textarea>
             <p id="filter-warning" class="filter-warning hidden">Please avoid using inappropriate language.</p>
         `;
@@ -1860,6 +1900,21 @@ class App {
     renderYearView() {
         const container = document.getElementById('planner-year-content');
         if (!container) return;
+
+        // Force reflow to re-trigger CSS animation
+        container.style.animation = 'none';
+        void container.offsetHeight;
+
+        if (this.slideDirection === 'left') {
+            container.style.animation = 'scheduleSlideInLeft 0.25s cubic-bezier(0.33, 1, 0.68, 1) both';
+        } else if (this.slideDirection === 'right') {
+            container.style.animation = 'scheduleSlideInRight 0.25s cubic-bezier(0.33, 1, 0.68, 1) both';
+        } else {
+            container.style.animation = '';
+        }
+
+        // Clear it so dropping courses doesn't magically slide
+        this.slideDirection = null;
 
         const year = this.activeYear;
         const fallCourses = this.coursePlanner[year]?.Fall || [];
