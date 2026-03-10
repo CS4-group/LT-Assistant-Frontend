@@ -744,6 +744,7 @@ body * {
         opacity: 0;
         transform: translateY(15px) scale(0.97);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -932,13 +933,14 @@ body * {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 0.4rem;
+    padding: 1rem 1rem 2rem 1rem;
+    /* Increased horizontal padding to prevent cut offs */
     scroll-behavior: smooth;
 }
 
 /* Custom scrollbar for items list */
 .items-list::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 
 .items-list::-webkit-scrollbar-track {
@@ -977,6 +979,7 @@ body * {
         opacity: 0;
         transform: translate3d(-20px, 0, 0) scale(0.95);
     }
+
     100% {
         opacity: 1;
         transform: translate3d(0, 0, 0) scale(1);
@@ -1015,7 +1018,7 @@ body * {
 
 .main-content {
     flex: 1;
-    padding: 2rem;
+    padding: 2rem 2rem 5rem 2rem;
     overflow-y: auto;
     background-color: var(--main-content-bg);
     backdrop-filter: blur(20px);
@@ -1097,6 +1100,7 @@ body * {
         opacity: 0;
         transform: translateY(20px) scale(0.98);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -1160,6 +1164,7 @@ body * {
         opacity: 0;
         transform: translate3d(0, 15px, 0) scale(0.95);
     }
+
     100% {
         opacity: 1;
         transform: translate3d(0, 0, 0) scale(1);
@@ -1524,6 +1529,7 @@ body * {
         opacity: 0;
         transform: translate3d(30px, 0, 0) scale(0.94);
     }
+
     100% {
         opacity: 1;
         transform: translate3d(0, 0, 0) scale(1);
@@ -1767,6 +1773,7 @@ body * {
         opacity: 0;
         transform: translateX(-40px) scale(0.8) rotate(-2deg);
     }
+
     100% {
         opacity: 1;
         transform: translateX(0) scale(1) rotate(0);
@@ -1778,6 +1785,7 @@ body * {
         opacity: 0;
         transform: scale(0.8) translateY(20px);
     }
+
     100% {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -1790,6 +1798,7 @@ body * {
         translate: 0 40px;
         scale: 0.85;
     }
+
     100% {
         opacity: 1;
         translate: 0 0;
@@ -1802,6 +1811,7 @@ body * {
         transform: translateY(30px) scale(0.95);
         opacity: 0;
     }
+
     100% {
         transform: translateY(0) scale(1);
         opacity: 1;
@@ -1934,6 +1944,7 @@ body * {
         opacity: 0;
         transform: translateY(15px) scale(0.95);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -2751,6 +2762,7 @@ body * {
         opacity: 0;
         transform: translateY(-25px) scale(0.98);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -2860,6 +2872,7 @@ body * {
         opacity: 0;
         transform: translateY(15px) scale(0.98);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -3098,4 +3111,71 @@ body * {
     font-size: 1rem;
     color: var(--gray-400);
     font-weight: 500;
+}
+
+/* =========================================================================
+   Satisfying Scroll Animations (Expand & Contract on entry/exit)
+   ========================================================================= */
+
+/* Fallback for browsers lacking animation-timeline */
+.item-card.scroll-leave-bottom,
+.review-card.scroll-leave-bottom,
+.course-card.scroll-leave-bottom {
+    opacity: 0 !important;
+    transform: scale(0.85) translateY(30px);
+    box-shadow: 0 0px 0px rgba(0, 0, 0, 0) !important;
+}
+
+.item-card.scroll-visible,
+.review-card.scroll-visible,
+.course-card.scroll-visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transition: opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+/* Ensure hover works with the IntersectionObserver fallback */
+.item-card.scroll-visible:hover {
+    transform: translate3d(4px, 0, 0) scale(1.02);
+}
+
+.review-card.scroll-visible:hover {
+    transform: translateY(-2px) scale(1.01);
+}
+
+.course-card.scroll-visible:hover {
+    transform: translateY(-4px) scale(1.02);
+}
+
+/* Native timeline-driven scroll scrub effect for Chromium (Buttery smooth 60fps) */
+@supports (animation-timeline: view()) {
+    @keyframes satisfyScrollTimeline {
+        0% {
+            opacity: 0;
+            scale: 0.85;
+            translate: 0 40px;
+        }
+
+        20% {
+            opacity: 1;
+            scale: 1;
+            translate: 0 0;
+        }
+
+        100% {
+            opacity: 1;
+            scale: 1;
+            translate: 0 0;
+        }
+    }
+
+    .item-card,
+    .review-card,
+    .course-card {
+        /* Prevents base animation from conflicting by overriding properties natively */
+        animation: satisfyScrollTimeline linear both !important;
+        animation-timeline: view() !important;
+        animation-range: cover 0% cover 100% !important;
+        will-change: transform, opacity;
+    }
 }

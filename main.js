@@ -28,6 +28,9 @@ class App {
 
         // Set up form handlers
         this.setupEventListeners();
+
+        // Setup scroll animations for satisfying expand/contract effect
+        this.initScrollAnimations();
     }
 
     // Theme Management
@@ -59,6 +62,162 @@ class App {
                 }
                 setTimeout(() => document.documentElement.classList.remove('theme-transitioning'), 500);
             });
+        }
+    }
+
+    // Initialize satisfying scroll animations (expand & contract)
+    initScrollAnimations() {
+        this.scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const rect = entry.boundingClientRect;
+                const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+
+                // If native animation-timeline is supported, we skip observer class toggling
+                if (CSS.supports('animation-timeline: view()')) {
+                    return;
+                }
+
+                if (entry.isIntersecting) {
+                    entry.target.classList.remove('scroll-leave-bottom');
+                    entry.target.classList.add('scroll-visible');
+                } else {
+                    entry.target.classList.remove('scroll-visible');
+                    // Only apply leave animation if leaving from the bottom
+                    if (rect.top > windowHeight / 2) {
+                        entry.target.classList.add('scroll-leave-bottom');
+                    } else {
+                        // Keep visible when scrolling past the top
+                        entry.target.classList.add('scroll-visible');
+                    }
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -20px 0px'
+        });
+
+        // Dynamically observe elements as they are added
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes) {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === 1) { // ELEMENT_NODE
+                            if (node.matches && node.matches('.item-card, .review-card, .course-card')) {
+                                this.scrollObserver.observe(node);
+                            }
+                            const children = node.querySelectorAll('.item-card, .review-card, .course-card') || [];
+                            children.forEach(child => this.scrollObserver.observe(child));
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        // Observe any existing elements immediately
+        document.querySelectorAll('.item-card, .review-card, .course-card').forEach(el => this.scrollObserver.observe(el));
+
+        // Setup the stretch rubber-banding effect globally for scrolling menus
+        this.setupRubberBanding();
+    }
+
+    setupRubberBanding() {
+        this.activeRubberBands = new Map();
+
+        const tick = () => {
+            let active = false;
+
+            this.activeRubberBands.forEach((state, container) => {
+                // Decay the target stretch to simulate losing scroll momentum over time
+                state.target *= 0.85;
+                if (Math.abs(state.target) < 0.5) state.target = 0;
+
+                // Spring physics: move current towards target
+                const diff = state.target - state.current;
+                state.velocity += diff * 0.25; // stiffness
+                state.velocity *= 0.65; // friction / damping
+                state.current += state.velocity;
+
+                if (Math.abs(state.current) > 0.1 || Math.abs(state.target) > 0.1 || Math.abs(state.velocity) > 0.1) {
+                    active = true;
+
+                    // Cap visual stretch
+                    let visualStretch = state.current;
+                    if (visualStretch > 45) visualStretch = 45;
+
+                    const stretchScale = 1 + (visualStretch / 400);
+                    const translateY = state.origin === 'top' ? visualStretch / 2.5 : -visualStretch / 2.5;
+
+                    container.style.transition = 'none'; // Controlled purely by rAF
+                    container.style.transformOrigin = state.origin === 'top' ? 'top center' : 'bottom center';
+                    container.style.transform = `scaleY(${stretchScale}) translateY(${translateY}px)`;
+                } else {
+                    state.current = 0;
+                    state.target = 0;
+                    state.velocity = 0;
+                    container.style.transform = '';
+                    this.activeRubberBands.delete(container);
+                }
+            });
+
+            if (active) {
+                this.rubberBandFrame = requestAnimationFrame(tick);
+            } else {
+                this.rubberBandFrame = null;
+            }
+        };
+
+        document.addEventListener('wheel', (e) => {
+            // Find the closest scrollable container
+            const getScrollable = (node) => {
+                if (!node || node === document.body || node === document.documentElement) return null;
+                const style = window.getComputedStyle(node);
+                const overflowY = style.overflowY;
+                const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight;
+                if (isScrollable) return node;
+                return getScrollable(node.parentNode);
+            };
+
+            const container = getScrollable(e.target);
+            if (!container) return;
+
+            // Only apply to main scrolling lists
+            if (!container.matches('.items-list, .main-content, .planner-year-content')) return;
+
+            const atTop = container.scrollTop <= 0;
+            // Epsilon check for Chrome Float bounds
+            const atBottom = Math.ceil(container.scrollTop + container.clientHeight) >= container.scrollHeight - 1;
+
+            if (atTop && e.deltaY < 0) {
+                // Scrolling up when at top
+                e.preventDefault();
+                this.applyStretchSpring(container, Math.abs(e.deltaY), 'top', tick);
+            } else if (atBottom && e.deltaY > 0) {
+                // Scrolling down when at bottom
+                e.preventDefault();
+                this.applyStretchSpring(container, Math.abs(e.deltaY), 'bottom', tick);
+            }
+        }, { passive: false });
+    }
+
+    applyStretchSpring(container, delta, origin, loopObj) {
+        if (!this.activeRubberBands.has(container)) {
+            this.activeRubberBands.set(container, { current: 0, target: 0, velocity: 0, origin: origin });
+        }
+
+        const state = this.activeRubberBands.get(container);
+        state.origin = origin; // Update origin just in case
+
+        // Normalize delta to handle high-res trackpads vs stepped mice perfectly
+        const normalizedDelta = Math.min(Math.abs(delta), 60);
+        state.target += normalizedDelta * 0.15;
+
+        if (!this.rubberBandFrame) {
+            this.rubberBandFrame = requestAnimationFrame(loopObj);
         }
     }
 
