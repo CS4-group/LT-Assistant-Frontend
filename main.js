@@ -132,14 +132,14 @@ class App {
             let active = false;
 
             this.activeRubberBands.forEach((state, container) => {
-                // Decay the target stretch to simulate losing scroll momentum over time
-                state.target *= 0.85;
+                // Decay target stretch gentler so grooved scroll momentum has time to stack up
+                state.target *= 0.92;
                 if (Math.abs(state.target) < 0.5) state.target = 0;
 
                 // Spring physics: move current towards target
                 const diff = state.target - state.current;
-                state.velocity += diff * 0.25; // stiffness
-                state.velocity *= 0.65; // friction / damping
+                state.velocity += diff * 0.15; // lower stiffness
+                state.velocity *= 0.8; // less friction to let sliding carry over between clicks
                 state.current += state.velocity;
 
                 if (Math.abs(state.current) > 0.1 || Math.abs(state.target) > 0.1 || Math.abs(state.velocity) > 0.1) {
@@ -1305,8 +1305,10 @@ class App {
             const delay = Math.min(index * 0.04, 0.8); // stagger up to 800ms
             return `
                 <div class="item-card ${isSelected ? 'selected' : ''}"
+                     data-id="${item.id}"
                      style="animation-delay: ${delay}s"
                      onclick="window.app.selectItem('${item.id}')">
+                    <div class="selection-bg"></div>
                     <div class="item-title">${item.title}</div>
                     <div class="item-description">${getItemDescription(item)}</div>
                 </div>
@@ -1324,7 +1326,17 @@ class App {
 
     async selectItem(itemId) {
         this.selectedItemId = String(itemId); // Ensure consistent string storage
-        this.updateItemsList(); // Refresh to show selection
+        
+        const list = document.getElementById('items-list');
+        if (list) {
+            list.querySelectorAll('.item-card').forEach(card => {
+                if (card.dataset.id === String(itemId)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
 
         // Show loading state for item details
         const itemDetails = document.getElementById('item-details');
@@ -1335,10 +1347,11 @@ class App {
 
         await this.updateItemDetails();
 
-        // Fade content back in
-        itemDetails.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-        itemDetails.style.opacity = '1';
-        itemDetails.style.transform = 'translateY(0)';
+        // Play loud entry animation for the right panel
+        itemDetails.style.transition = 'none';
+        itemDetails.style.animation = 'none';
+        void itemDetails.offsetWidth; // Force a browser reflow to physically reset the animation
+        itemDetails.style.animation = 'detailsPopIn 0.6s var(--ease-bouncy) forwards';
 
         // Enable add review button
         document.getElementById('header-add-review-btn').disabled = false;
