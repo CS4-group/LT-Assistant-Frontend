@@ -3,7 +3,7 @@ class App {
     constructor() {
         this.currentPage = '';
         this.isAuthenticated = false;
-        this.apiBaseUrl = 'http://localhost:3000'; // Configure your API base URL here
+        this.apiBaseUrl = CONFIG.API_BASE_URL;
         this.courseNames = []; // Cache for course names
         this.courseDetails = {}; // Cache for individual course details
         this.clubs = []; // Cache for clubs
@@ -454,19 +454,22 @@ class App {
     handleRouting() {
         const path = window.location.hash.slice(1) || '/';
 
-        // Redirect to login if not authenticated
-        if (!this.isAuthenticated && path !== '/login') {
-            this.navigateTo('/login');
+        // Redirect to landing if not authenticated (allow login and landing)
+        if (!this.isAuthenticated && path !== '/login' && path !== '/landing') {
+            this.navigateTo('/landing');
             return;
         }
 
-        // Redirect to home if authenticated and on login page
-        if (this.isAuthenticated && path === '/login') {
+        // Redirect to home if authenticated and on login/landing page
+        if (this.isAuthenticated && (path === '/login' || path === '/landing')) {
             this.navigateTo('/');
             return;
         }
 
         switch (path) {
+            case '/landing':
+                this.renderPage('landing');
+                break;
             case '/login':
                 this.renderPage('login');
                 break;
@@ -506,12 +509,19 @@ class App {
 
         this.currentPage = pageName;
 
+        // Show/hide theme toggle (hide on landing page)
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) themeToggle.style.display = pageName === 'landing' ? 'none' : '';
+
         // Setup page-specific functionality
         this.setupPageHandlers(pageName);
     }
 
     setupPageHandlers(pageName) {
         switch (pageName) {
+            case 'landing':
+                this.setupLandingHandlers();
+                break;
             case 'login':
                 this.setupLoginHandlers();
                 break;
@@ -539,6 +549,61 @@ class App {
                 this.navigateTo(navLink.dataset.nav);
             }
         });
+    }
+
+    setupLandingHandlers() {
+        // Nav background on scroll
+        const nav = document.getElementById('landing-nav');
+        const onScroll = () => {
+            if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+
+        // Smooth scroll for data-scroll-to buttons
+        document.querySelectorAll('[data-scroll-to]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = document.getElementById(btn.dataset.scrollTo);
+                target?.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Scroll reveal observer
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('revealed');
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('[data-landing-reveal]').forEach(el => revealObserver.observe(el));
+
+        // Counter animation for stats
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                const target = parseInt(el.dataset.countTo, 10);
+                const duration = 1400;
+                const start = performance.now();
+                const animate = (now) => {
+                    const progress = Math.min((now - start) / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                    el.textContent = Math.round(target * eased);
+                    if (progress < 1) requestAnimationFrame(animate);
+                };
+                requestAnimationFrame(animate);
+                counterObserver.unobserve(el);
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('[data-count-to]').forEach(el => counterObserver.observe(el));
+
+        // Clean up scroll listener when navigating away
+        const cleanup = () => {
+            window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('hashchange', cleanup);
+        };
+        window.addEventListener('hashchange', cleanup);
     }
 
     setupLoginHandlers() {

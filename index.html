@@ -7,6 +7,9 @@
     <title>LT Assistant</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="drag-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
@@ -424,12 +427,171 @@
         </div>
     </template>
 
+    <!-- Landing Page -->
+    <template id="landing-template">
+        <div class="landing-page">
+            <!-- Nav -->
+            <nav class="landing-nav" id="landing-nav">
+                <div class="landing-nav-inner">
+                    <a href="#/landing" class="landing-logo">
+                        <img src="sift.png" alt="LT Assistant" class="landing-logo-img">
+                        <span class="landing-logo-text">LT Assistant</span>
+                    </a>
+                    <a href="#/login" class="landing-nav-cta">Sign Up</a>
+                </div>
+            </nav>
+
+            <!-- Hero -->
+            <section class="landing-hero">
+                <div class="landing-hero-bg">
+                    <img src="title-bg.jpg" alt="" class="landing-hero-img">
+                    <div class="landing-hero-overlay"></div>
+                </div>
+                <div class="landing-hero-content">
+                    <div class="landing-hero-badge">Lake Travis High School</div>
+                    <h1 class="landing-hero-title">
+                        <span class="landing-hero-line">Plan Your Path.</span>
+                        <span class="landing-hero-line landing-hero-line--accent">Rate Your Experience.</span>
+                    </h1>
+                    <p class="landing-hero-sub">The all-in-one course planning and peer review platform built by Cavs, for Cavs.</p>
+                    <div class="landing-hero-actions">
+                        <a href="#/login" class="landing-btn landing-btn--primary">Get Started</a>
+                        <button class="landing-btn landing-btn--ghost" data-scroll-to="landing-features">Learn More</button>
+                    </div>
+                </div>
+                <div class="landing-hero-scroll">
+                    <div class="landing-scroll-line"></div>
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section class="landing-features" id="landing-features">
+                <div class="landing-container">
+                    <div class="landing-section-header">
+                        <span class="landing-overline">Features</span>
+                        <h2 class="landing-section-title">Everything you need to<br>navigate high school</h2>
+                    </div>
+                    <div class="landing-features-grid">
+                        <div class="landing-feature-card" data-landing-reveal>
+                            <div class="landing-feature-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                            </div>
+                            <h3 class="landing-feature-name">4-Year Course Planner</h3>
+                            <p class="landing-feature-desc">Drag and drop courses to build your perfect high school schedule. Plan all four years with an intuitive, visual interface.</p>
+                        </div>
+                        <div class="landing-feature-card" data-landing-reveal>
+                            <div class="landing-feature-icon landing-feature-icon--red">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                            </div>
+                            <h3 class="landing-feature-name">Peer Ratings & Reviews</h3>
+                            <p class="landing-feature-desc">Read honest reviews from fellow students on courses, teachers, and clubs. Share your own experience to help others decide.</p>
+                        </div>
+                        <div class="landing-feature-card" data-landing-reveal>
+                            <div class="landing-feature-icon landing-feature-icon--amber">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                    <line x1="9" y1="9" x2="15" y2="9"></line>
+                                    <line x1="12" y1="6" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                            <h3 class="landing-feature-name">AI Course Assistant</h3>
+                            <p class="landing-feature-desc">Get personalized course recommendations from our built-in AI chatbot. Ask about prerequisites, workload, or the best path for your goals.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <section class="landing-stats">
+                <div class="landing-container">
+                    <div class="landing-stats-grid">
+                        <div class="landing-stat" data-landing-reveal>
+                            <span class="landing-stat-number" data-count-to="200">0</span><span class="landing-stat-suffix">+</span>
+                            <span class="landing-stat-label">Courses Listed</span>
+                        </div>
+                        <div class="landing-stat" data-landing-reveal>
+                            <span class="landing-stat-number" data-count-to="50">0</span><span class="landing-stat-suffix">+</span>
+                            <span class="landing-stat-label">Clubs & Activities</span>
+                        </div>
+                        <div class="landing-stat" data-landing-reveal>
+                            <span class="landing-stat-number" data-count-to="4">0</span><span class="landing-stat-suffix"></span>
+                            <span class="landing-stat-label">Year Plan Builder</span>
+                        </div>
+                        <div class="landing-stat" data-landing-reveal>
+                            <span class="landing-stat-number" data-count-to="100">0</span><span class="landing-stat-suffix">%</span>
+                            <span class="landing-stat-label">Free for Students</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works -->
+            <section class="landing-steps">
+                <div class="landing-container">
+                    <div class="landing-section-header">
+                        <span class="landing-overline">How It Works</span>
+                        <h2 class="landing-section-title">Get started in minutes</h2>
+                    </div>
+                    <div class="landing-steps-grid">
+                        <div class="landing-step" data-landing-reveal>
+                            <span class="landing-step-num">01</span>
+                            <h3 class="landing-step-title">Sign In</h3>
+                            <p class="landing-step-desc">Use your Google account to create your profile in seconds. No passwords to remember.</p>
+                        </div>
+                        <div class="landing-step" data-landing-reveal>
+                            <span class="landing-step-num">02</span>
+                            <h3 class="landing-step-title">Build Your Plan</h3>
+                            <p class="landing-step-desc">Drag courses into your 4-year schedule. Our planner keeps track of credits and prerequisites.</p>
+                        </div>
+                        <div class="landing-step" data-landing-reveal>
+                            <span class="landing-step-num">03</span>
+                            <h3 class="landing-step-title">Rate & Discover</h3>
+                            <p class="landing-step-desc">Share your experience and explore what other Cavaliers recommend for every course and club.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA -->
+            <section class="landing-cta">
+                <div class="landing-container">
+                    <div class="landing-cta-inner">
+                        <h2 class="landing-cta-title">Ready to plan your future?</h2>
+                        <p class="landing-cta-sub">Join your fellow Cavaliers and take control of your high school journey.</p>
+                        <a href="#/login" class="landing-btn landing-btn--white landing-btn--lg">Sign Up Now</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="landing-footer">
+                <div class="landing-container">
+                    <div class="landing-footer-inner">
+                        <div class="landing-footer-brand">
+                            <img src="sift.png" alt="LT Assistant" class="landing-footer-logo">
+                            <span>LT Assistant</span>
+                        </div>
+                        <p class="landing-footer-copy">Built for Lake Travis High School students.</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </template>
+
     <template id="loading-template">
         <div class="page-container loading-page">
             <div class="loading-spinner"></div>
         </div>
     </template>
 
+    <script src="config.js"></script>
     <script src="main.js"></script>
 </body>
 
