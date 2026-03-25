@@ -38,6 +38,353 @@
         </svg>
     </button>
 
+    <!-- Landing page -->
+    <template id="landing-template">
+        <div class="page-container landing-page">
+
+            <!-- Fixed Navbar -->
+            <nav class="landing-nav">
+                <div class="landing-nav-inner">
+                    <div class="landing-nav-logo">
+                        <img src="sift.png" alt="LT" class="landing-nav-logo-img">
+                        <span class="landing-nav-brand">LT Assistant</span>
+                    </div>
+                    <button class="landing-nav-cta" onclick="navigateTo('/login')">
+                        Launch App
+                        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Hero Section -->
+            <section class="landing-hero">
+                <div class="landing-hero-bg"></div>
+                <div class="landing-particles">
+                    <span class="landing-particle" style="--i:0"></span>
+                    <span class="landing-particle" style="--i:1"></span>
+                    <span class="landing-particle" style="--i:2"></span>
+                    <span class="landing-particle" style="--i:3"></span>
+                    <span class="landing-particle" style="--i:4"></span>
+                    <span class="landing-particle" style="--i:5"></span>
+                    <span class="landing-particle" style="--i:6"></span>
+                    <span class="landing-particle" style="--i:7"></span>
+                    <span class="landing-particle" style="--i:8"></span>
+                    <span class="landing-particle" style="--i:9"></span>
+                    <span class="landing-particle" style="--i:10"></span>
+                    <span class="landing-particle" style="--i:11"></span>
+                    <span class="landing-particle" style="--i:12"></span>
+                    <span class="landing-particle" style="--i:13"></span>
+                    <span class="landing-particle" style="--i:14"></span>
+                    <span class="landing-particle" style="--i:15"></span>
+                    <span class="landing-particle" style="--i:16"></span>
+                    <span class="landing-particle" style="--i:17"></span>
+                    <span class="landing-particle" style="--i:18"></span>
+                    <span class="landing-particle" style="--i:19"></span>
+                </div>
+                <div class="landing-hero-content">
+                    <img src="sift.png" alt="LT Assistant" class="landing-hero-logo">
+                    <h1 class="landing-hero-appname">LT Assistant</h1>
+                    <p class="landing-hero-tagline">
+                        <span class="landing-word" style="--word-i:0">Plan.</span>
+                        <span class="landing-word" style="--word-i:1">Rate.</span>
+                        <span class="landing-word" style="--word-i:2">Succeed.</span>
+                    </p>
+                    <p class="landing-hero-subtitle">Your AI-powered high school course planning companion</p>
+                    <button class="landing-hero-btn" onclick="navigateTo('/login')">
+                        <span>Launch App</span>
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <div class="landing-scroll-indicator">
+                    <span>Scroll to explore</span>
+                    <div class="landing-scroll-arrow">
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Bento Grid -->
+            <section class="landing-features">
+                <h2 class="landing-section-title landing-reveal" data-reveal-delay="0">Everything you need</h2>
+                <p class="landing-section-subtitle landing-reveal" data-reveal-delay="1">Powerful tools for every step of your high school journey</p>
+                <div class="landing-bento">
+
+                    <!-- Card 1: Course Rating (wide) -->
+                    <div class="landing-bento-card landing-bento-card--wide landing-reveal" data-reveal-delay="0">
+                        <div class="landing-bento-icon" aria-hidden="true">
+                            <svg viewBox="0 0 80 80" class="landing-icon-svg landing-icon-stars">
+                                <path class="landing-star landing-star-1" d="M40 10l7.5 15.2 16.8 2.4-12.15 11.85 2.87 16.7L40 48.1l-15.02 8.05 2.87-16.7L15.7 27.6l16.8-2.4z" fill="none" stroke="#fbbf24" stroke-width="2"/>
+                                <path class="landing-star landing-star-2" d="M18 52l4 8.1 8.9 1.3-6.45 6.3 1.52 8.9L18 72.3l-7.97 4.3 1.52-8.9L5.1 61.4l8.9-1.3z" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.5"/>
+                                <path class="landing-star landing-star-3" d="M62 50l4 8.1 8.9 1.3-6.45 6.3 1.52 8.9L62 70.3l-7.97 4.3 1.52-8.9-6.45-6.3 8.9-1.3z" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.5"/>
+                                <circle class="landing-star-sparkle" cx="58" cy="14" r="1.5" fill="#fbbf24" opacity="0"/>
+                                <circle class="landing-star-sparkle" cx="22" cy="18" r="1" fill="#fbbf24" opacity="0"/>
+                            </svg>
+                        </div>
+                        <h3>Course Rating System</h3>
+                        <p>Rate courses, clubs, and teachers with star ratings. Read authentic peer reviews, search and filter to make informed decisions about your classes.</p>
+                    </div>
+
+                    <!-- Card 2: 4-Year Planner -->
+                    <div class="landing-bento-card landing-reveal" data-reveal-delay="1">
+                        <div class="landing-bento-icon" aria-hidden="true">
+                            <svg viewBox="0 0 80 80" class="landing-icon-svg landing-icon-calendar">
+                                <rect class="landing-cal-frame" x="10" y="16" width="60" height="52" rx="6" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <line class="landing-cal-header" x1="10" y1="30" x2="70" y2="30" stroke="currentColor" stroke-width="2"/>
+                                <line class="landing-cal-divider" x1="40" y1="30" x2="40" y2="68" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+                                <rect class="landing-cal-cell" x="16" y="35" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:0"/>
+                                <rect class="landing-cal-cell" x="30" y="35" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:1"/>
+                                <rect class="landing-cal-cell" x="44" y="35" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:2"/>
+                                <rect class="landing-cal-cell" x="58" y="35" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:3"/>
+                                <rect class="landing-cal-cell" x="16" y="47" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:4"/>
+                                <rect class="landing-cal-cell" x="30" y="47" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:5"/>
+                                <rect class="landing-cal-cell" x="44" y="47" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:6"/>
+                                <rect class="landing-cal-cell" x="58" y="47" width="10" height="8" rx="2" fill="currentColor" opacity="0" style="--cell-i:7"/>
+                                <rect class="landing-cal-cell" x="16" y="59" width="10" height="6" rx="2" fill="currentColor" opacity="0" style="--cell-i:8"/>
+                                <rect class="landing-cal-cell" x="30" y="59" width="10" height="6" rx="2" fill="currentColor" opacity="0" style="--cell-i:9"/>
+                            </svg>
+                        </div>
+                        <h3>4-Year Course Planner</h3>
+                        <p>Drag-and-drop scheduling across all four years with semester-by-semester views.</p>
+                    </div>
+
+                    <!-- Card 3: AI Assistant -->
+                    <div class="landing-bento-card landing-reveal" data-reveal-delay="2">
+                        <div class="landing-bento-icon" aria-hidden="true">
+                            <svg viewBox="0 0 80 80" class="landing-icon-svg landing-icon-ai">
+                                <rect class="landing-ai-bubble" x="12" y="14" width="56" height="36" rx="12" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <polygon class="landing-ai-tail" points="26,50 38,50 30,60" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <circle class="landing-ai-dot" cx="30" cy="32" r="3" fill="currentColor" style="--dot-i:0"/>
+                                <circle class="landing-ai-dot" cx="40" cy="32" r="3" fill="currentColor" style="--dot-i:1"/>
+                                <circle class="landing-ai-dot" cx="50" cy="32" r="3" fill="currentColor" style="--dot-i:2"/>
+                                <path class="landing-ai-sparkle" d="M62 10l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fbbf24" opacity="0"/>
+                                <path class="landing-ai-sparkle landing-ai-sparkle-2" d="M14 8l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z" fill="#ef4444" opacity="0"/>
+                            </svg>
+                        </div>
+                        <h3>AI Course Assistant</h3>
+                        <p>Natural language course requests and smart recommendations powered by AI.</p>
+                    </div>
+
+                    <!-- Card 4: Onboarding -->
+                    <div class="landing-bento-card landing-reveal" data-reveal-delay="3">
+                        <div class="landing-bento-icon" aria-hidden="true">
+                            <svg viewBox="0 0 80 80" class="landing-icon-svg landing-icon-steps">
+                                <line class="landing-step-line" x1="12" y1="40" x2="68" y2="40" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                                <line class="landing-step-fill" x1="12" y1="40" x2="68" y2="40" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="56" stroke-dashoffset="56"/>
+                                <circle class="landing-step-dot" cx="12" cy="40" r="6" fill="none" stroke="currentColor" stroke-width="2" style="--step-i:0"/>
+                                <circle class="landing-step-dot" cx="26" cy="40" r="6" fill="none" stroke="currentColor" stroke-width="2" style="--step-i:1"/>
+                                <circle class="landing-step-dot" cx="40" cy="40" r="6" fill="none" stroke="currentColor" stroke-width="2" style="--step-i:2"/>
+                                <circle class="landing-step-dot" cx="54" cy="40" r="6" fill="none" stroke="currentColor" stroke-width="2" style="--step-i:3"/>
+                                <circle class="landing-step-dot" cx="68" cy="40" r="6" fill="none" stroke="currentColor" stroke-width="2" style="--step-i:4"/>
+                                <path class="landing-step-check" d="M36 40l3 3 5-6" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0"/>
+                            </svg>
+                        </div>
+                        <h3>Smart Onboarding</h3>
+                        <p>Personalized 5-step profile setup with career path and interest matching.</p>
+                    </div>
+
+                    <!-- Card 5: Dark Mode -->
+                    <div class="landing-bento-card landing-reveal" data-reveal-delay="4">
+                        <div class="landing-bento-icon" aria-hidden="true">
+                            <svg viewBox="0 0 80 80" class="landing-icon-svg landing-icon-theme">
+                                <circle class="landing-theme-sun" cx="40" cy="40" r="12" fill="#fbbf24"/>
+                                <g class="landing-theme-rays" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="40" y1="10" x2="40" y2="20"/>
+                                    <line x1="40" y1="60" x2="40" y2="70"/>
+                                    <line x1="13.8" y1="18.8" x2="20.8" y2="25.8"/>
+                                    <line x1="59.2" y1="54.2" x2="66.2" y2="61.2"/>
+                                    <line x1="10" y1="40" x2="20" y2="40"/>
+                                    <line x1="60" y1="40" x2="70" y2="40"/>
+                                    <line x1="13.8" y1="61.2" x2="20.8" y2="54.2"/>
+                                    <line x1="59.2" y1="25.8" x2="66.2" y2="18.8"/>
+                                </g>
+                                <circle class="landing-theme-moon" cx="50" cy="34" r="11" fill="#0a0e1a" opacity="0"/>
+                            </svg>
+                        </div>
+                        <h3>Dark Mode</h3>
+                        <p>Beautiful dark and light themes that adapt to your preference.</p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Feature Spotlights -->
+            <!-- Spotlight 1: Rating System -->
+            <section class="landing-spotlight">
+                <div class="landing-spotlight-inner landing-reveal" data-reveal-delay="0">
+                    <div class="landing-spotlight-visual">
+                        <div class="landing-spotlight-glow"></div>
+                        <svg viewBox="0 0 200 160" class="landing-spotlight-svg" aria-hidden="true">
+                            <!-- Rating UI mockup -->
+                            <rect x="10" y="10" width="180" height="140" rx="12" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                            <!-- Tabs -->
+                            <rect class="landing-spot-tab" x="20" y="20" width="45" height="20" rx="6" fill="#c42525" opacity="0.9"/>
+                            <rect class="landing-spot-tab" x="70" y="20" width="35" height="20" rx="6" fill="rgba(255,255,255,0.1)"/>
+                            <rect class="landing-spot-tab" x="110" y="20" width="45" height="20" rx="6" fill="rgba(255,255,255,0.1)"/>
+                            <!-- Star row -->
+                            <g class="landing-spot-stars" transform="translate(20, 55)">
+                                <polygon points="8,0 10.5,5 16,6 12,10 13,16 8,13 3,16 4,10 0,6 5.5,5" fill="#fbbf24" class="landing-spot-star" style="--si:0"/>
+                                <polygon points="28,0 30.5,5 36,6 32,10 33,16 28,13 23,16 24,10 20,6 25.5,5" fill="#fbbf24" class="landing-spot-star" style="--si:1"/>
+                                <polygon points="48,0 50.5,5 56,6 52,10 53,16 48,13 43,16 44,10 40,6 45.5,5" fill="#fbbf24" class="landing-spot-star" style="--si:2"/>
+                                <polygon points="68,0 70.5,5 76,6 72,10 73,16 68,13 63,16 64,10 60,6 65.5,5" fill="#fbbf24" class="landing-spot-star" style="--si:3"/>
+                                <polygon points="88,0 90.5,5 96,6 92,10 93,16 88,13 83,16 84,10 80,6 85.5,5" fill="rgba(255,255,255,0.15)" class="landing-spot-star" style="--si:4"/>
+                            </g>
+                            <!-- Review bars -->
+                            <rect class="landing-spot-bar" x="20" y="80" width="120" height="6" rx="3" fill="rgba(255,255,255,0.08)"/>
+                            <rect class="landing-spot-bar-fill" x="20" y="80" width="0" height="6" rx="3" fill="#c42525" style="--bar-w:95"/>
+                            <rect class="landing-spot-bar" x="20" y="92" width="120" height="6" rx="3" fill="rgba(255,255,255,0.08)"/>
+                            <rect class="landing-spot-bar-fill" x="20" y="92" width="0" height="6" rx="3" fill="#c42525" style="--bar-w:72"/>
+                            <rect class="landing-spot-bar" x="20" y="104" width="120" height="6" rx="3" fill="rgba(255,255,255,0.08)"/>
+                            <rect class="landing-spot-bar-fill" x="20" y="104" width="0" height="6" rx="3" fill="#c42525" style="--bar-w:55"/>
+                            <!-- Review card mockup -->
+                            <rect x="20" y="118" width="160" height="24" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+                        </svg>
+                    </div>
+                    <div class="landing-spotlight-text">
+                        <span class="landing-spotlight-badge">Rating System</span>
+                        <h2>Real reviews from real students</h2>
+                        <p>Browse courses, clubs, and teachers with detailed ratings. Filter, search, and make confident choices backed by peer experiences.</p>
+                        <ul class="landing-spotlight-features">
+                            <li class="landing-reveal" data-reveal-delay="1">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Star ratings with detailed breakdowns
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="2">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Course, club, and teacher tabs
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="3">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Search and filter capabilities
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Spotlight 2: Course Planner (reversed) -->
+            <section class="landing-spotlight landing-spotlight--reverse">
+                <div class="landing-spotlight-inner landing-reveal" data-reveal-delay="0">
+                    <div class="landing-spotlight-visual">
+                        <div class="landing-spotlight-glow landing-spotlight-glow--blue"></div>
+                        <svg viewBox="0 0 200 160" class="landing-spotlight-svg" aria-hidden="true">
+                            <rect x="10" y="10" width="180" height="140" rx="12" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                            <!-- Year tabs -->
+                            <rect class="landing-spot-yr" x="20" y="20" width="32" height="18" rx="5" fill="#c42525"/>
+                            <rect class="landing-spot-yr" x="56" y="20" width="32" height="18" rx="5" fill="rgba(255,255,255,0.08)"/>
+                            <rect class="landing-spot-yr" x="92" y="20" width="32" height="18" rx="5" fill="rgba(255,255,255,0.08)"/>
+                            <rect class="landing-spot-yr" x="128" y="20" width="32" height="18" rx="5" fill="rgba(255,255,255,0.08)"/>
+                            <!-- Semester labels -->
+                            <rect x="20" y="46" width="75" height="12" rx="4" fill="rgba(59,130,246,0.2)" stroke="rgba(59,130,246,0.3)" stroke-width="0.5"/>
+                            <rect x="105" y="46" width="75" height="12" rx="4" fill="rgba(16,185,129,0.2)" stroke="rgba(16,185,129,0.3)" stroke-width="0.5"/>
+                            <!-- Course slots -->
+                            <rect class="landing-spot-slot" x="20" y="64" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:0"/>
+                            <rect class="landing-spot-slot" x="20" y="80" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:1"/>
+                            <rect class="landing-spot-slot" x="20" y="96" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:2"/>
+                            <rect class="landing-spot-slot" x="20" y="112" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:3"/>
+                            <rect class="landing-spot-slot" x="105" y="64" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:4"/>
+                            <rect class="landing-spot-slot" x="105" y="80" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:5"/>
+                            <rect class="landing-spot-slot" x="105" y="96" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:6"/>
+                            <rect class="landing-spot-slot" x="105" y="112" width="75" height="12" rx="4" fill="rgba(255,255,255,0.06)" style="--slot-i:7"/>
+                            <!-- Drag indicator -->
+                            <rect class="landing-spot-drag" x="22" y="66" width="71" height="8" rx="3" fill="rgba(196,37,37,0.4)" stroke="#c42525" stroke-width="0.5" stroke-dasharray="3 2" opacity="0"/>
+                        </svg>
+                    </div>
+                    <div class="landing-spotlight-text">
+                        <span class="landing-spotlight-badge landing-spotlight-badge--blue">Course Planner</span>
+                        <h2>Map your entire high school journey</h2>
+                        <p>Intuitive drag-and-drop interface to plan courses across all four years. Organize by semester with real-time updates and validation.</p>
+                        <ul class="landing-spotlight-features">
+                            <li class="landing-reveal" data-reveal-delay="1">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Drag-and-drop course scheduling
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="2">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Year-by-year tab navigation
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="3">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Fall and Spring semester views
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Spotlight 3: AI Assistant -->
+            <section class="landing-spotlight">
+                <div class="landing-spotlight-inner landing-reveal" data-reveal-delay="0">
+                    <div class="landing-spotlight-visual">
+                        <div class="landing-spotlight-glow landing-spotlight-glow--purple"></div>
+                        <svg viewBox="0 0 200 160" class="landing-spotlight-svg" aria-hidden="true">
+                            <rect x="10" y="10" width="180" height="140" rx="12" fill="rgba(17,24,39,0.8)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                            <!-- Chat header -->
+                            <rect x="20" y="18" width="160" height="22" rx="6" fill="rgba(255,255,255,0.05)"/>
+                            <circle cx="34" cy="29" r="5" fill="#10b981"/>
+                            <!-- Chat messages -->
+                            <rect class="landing-spot-msg" x="60" y="48" width="110" height="22" rx="8" fill="rgba(196,37,37,0.2)" stroke="rgba(196,37,37,0.3)" stroke-width="0.5" style="--msg-i:0"/>
+                            <rect class="landing-spot-msg" x="20" y="78" width="130" height="30" rx="8" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" style="--msg-i:1"/>
+                            <rect class="landing-spot-msg" x="80" y="116" width="90" height="22" rx="8" fill="rgba(196,37,37,0.2)" stroke="rgba(196,37,37,0.3)" stroke-width="0.5" style="--msg-i:2"/>
+                            <!-- Typing indicator -->
+                            <g class="landing-spot-typing" transform="translate(20, 116)">
+                                <rect width="50" height="22" rx="8" fill="rgba(255,255,255,0.06)"/>
+                                <circle cx="16" cy="11" r="2.5" fill="rgba(255,255,255,0.4)" class="landing-spot-tdot" style="--td:0"/>
+                                <circle cx="25" cy="11" r="2.5" fill="rgba(255,255,255,0.4)" class="landing-spot-tdot" style="--td:1"/>
+                                <circle cx="34" cy="11" r="2.5" fill="rgba(255,255,255,0.4)" class="landing-spot-tdot" style="--td:2"/>
+                            </g>
+                        </svg>
+                    </div>
+                    <div class="landing-spotlight-text">
+                        <span class="landing-spotlight-badge landing-spotlight-badge--purple">AI Assistant</span>
+                        <h2>Your personal course advisor</h2>
+                        <p>Tell the AI what you want in plain English. It understands course requests, suggests placements, and helps you build the perfect schedule.</p>
+                        <ul class="landing-spotlight-features">
+                            <li class="landing-reveal" data-reveal-delay="1">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Natural language understanding
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="2">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Smart course recommendations
+                            </li>
+                            <li class="landing-reveal" data-reveal-delay="3">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                Instant schedule updates
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer CTA -->
+            <section class="landing-cta">
+                <div class="landing-cta-particles">
+                    <span class="landing-particle landing-particle--cta" style="--i:0"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:3"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:6"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:9"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:12"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:15"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:18"></span>
+                    <span class="landing-particle landing-particle--cta" style="--i:20"></span>
+                </div>
+                <div class="landing-cta-content landing-reveal" data-reveal-delay="0">
+                    <h2>Ready to plan your future?</h2>
+                    <p>Join students who are taking control of their high school journey.</p>
+                    <button class="landing-hero-btn" onclick="navigateTo('/login')">
+                        <span>Get Started</span>
+                        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </section>
+
+            <footer class="landing-footer">
+                <p>Built for LT students &copy; 2026 LT Assistant</p>
+            </footer>
+
+        </div>
+    </template>
+
     <!-- Login page -->
     <template id="login-template">
         <div class="page-container login-page">
@@ -424,164 +771,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </template>
-
-    <!-- Landing Page -->
-    <template id="landing-template">
-        <div class="landing-page">
-            <!-- Nav -->
-            <nav class="landing-nav" id="landing-nav">
-                <div class="landing-nav-inner">
-                    <a href="#/landing" class="landing-logo">
-                        <img src="sift.png" alt="LT Assistant" class="landing-logo-img">
-                        <span class="landing-logo-text">LT Assistant</span>
-                    </a>
-                    <a href="#/login" class="landing-nav-cta">Sign Up</a>
-                </div>
-            </nav>
-
-            <!-- Hero -->
-            <section class="landing-hero">
-                <div class="landing-hero-bg">
-                    <img src="title-bg.jpg" alt="" class="landing-hero-img">
-                    <div class="landing-hero-overlay"></div>
-                </div>
-                <div class="landing-hero-content">
-                    <div class="landing-hero-badge">Lake Travis High School</div>
-                    <h1 class="landing-hero-title">
-                        <span class="landing-hero-line">Plan Your Path.</span>
-                        <span class="landing-hero-line landing-hero-line--accent">Rate Your Experience.</span>
-                    </h1>
-                    <p class="landing-hero-sub">The all-in-one course planning and peer review platform built by Cavs, for Cavs.</p>
-                    <div class="landing-hero-actions">
-                        <a href="#/login" class="landing-btn landing-btn--primary">Get Started</a>
-                        <button class="landing-btn landing-btn--ghost" data-scroll-to="landing-features">Learn More</button>
-                    </div>
-                </div>
-                <div class="landing-hero-scroll">
-                    <div class="landing-scroll-line"></div>
-                </div>
-            </section>
-
-            <!-- Features -->
-            <section class="landing-features" id="landing-features">
-                <div class="landing-container">
-                    <div class="landing-section-header">
-                        <span class="landing-overline">Features</span>
-                        <h2 class="landing-section-title">Everything you need to<br>navigate high school</h2>
-                    </div>
-                    <div class="landing-features-grid">
-                        <div class="landing-feature-card" data-landing-reveal>
-                            <div class="landing-feature-icon">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                            </div>
-                            <h3 class="landing-feature-name">4-Year Course Planner</h3>
-                            <p class="landing-feature-desc">Drag and drop courses to build your perfect high school schedule. Plan all four years with an intuitive, visual interface.</p>
-                        </div>
-                        <div class="landing-feature-card" data-landing-reveal>
-                            <div class="landing-feature-icon landing-feature-icon--red">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                </svg>
-                            </div>
-                            <h3 class="landing-feature-name">Peer Ratings & Reviews</h3>
-                            <p class="landing-feature-desc">Read honest reviews from fellow students on courses, teachers, and clubs. Share your own experience to help others decide.</p>
-                        </div>
-                        <div class="landing-feature-card" data-landing-reveal>
-                            <div class="landing-feature-icon landing-feature-icon--amber">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                                    <line x1="9" y1="9" x2="15" y2="9"></line>
-                                    <line x1="12" y1="6" x2="12" y2="12"></line>
-                                </svg>
-                            </div>
-                            <h3 class="landing-feature-name">AI Course Assistant</h3>
-                            <p class="landing-feature-desc">Get personalized course recommendations from our built-in AI chatbot. Ask about prerequisites, workload, or the best path for your goals.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stats -->
-            <section class="landing-stats">
-                <div class="landing-container">
-                    <div class="landing-stats-grid">
-                        <div class="landing-stat" data-landing-reveal>
-                            <span class="landing-stat-number" data-count-to="200">0</span><span class="landing-stat-suffix">+</span>
-                            <span class="landing-stat-label">Courses Listed</span>
-                        </div>
-                        <div class="landing-stat" data-landing-reveal>
-                            <span class="landing-stat-number" data-count-to="50">0</span><span class="landing-stat-suffix">+</span>
-                            <span class="landing-stat-label">Clubs & Activities</span>
-                        </div>
-                        <div class="landing-stat" data-landing-reveal>
-                            <span class="landing-stat-number" data-count-to="4">0</span><span class="landing-stat-suffix"></span>
-                            <span class="landing-stat-label">Year Plan Builder</span>
-                        </div>
-                        <div class="landing-stat" data-landing-reveal>
-                            <span class="landing-stat-number" data-count-to="100">0</span><span class="landing-stat-suffix">%</span>
-                            <span class="landing-stat-label">Free for Students</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- How It Works -->
-            <section class="landing-steps">
-                <div class="landing-container">
-                    <div class="landing-section-header">
-                        <span class="landing-overline">How It Works</span>
-                        <h2 class="landing-section-title">Get started in minutes</h2>
-                    </div>
-                    <div class="landing-steps-grid">
-                        <div class="landing-step" data-landing-reveal>
-                            <span class="landing-step-num">01</span>
-                            <h3 class="landing-step-title">Sign In</h3>
-                            <p class="landing-step-desc">Use your Google account to create your profile in seconds. No passwords to remember.</p>
-                        </div>
-                        <div class="landing-step" data-landing-reveal>
-                            <span class="landing-step-num">02</span>
-                            <h3 class="landing-step-title">Build Your Plan</h3>
-                            <p class="landing-step-desc">Drag courses into your 4-year schedule. Our planner keeps track of credits and prerequisites.</p>
-                        </div>
-                        <div class="landing-step" data-landing-reveal>
-                            <span class="landing-step-num">03</span>
-                            <h3 class="landing-step-title">Rate & Discover</h3>
-                            <p class="landing-step-desc">Share your experience and explore what other Cavaliers recommend for every course and club.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CTA -->
-            <section class="landing-cta">
-                <div class="landing-container">
-                    <div class="landing-cta-inner">
-                        <h2 class="landing-cta-title">Ready to plan your future?</h2>
-                        <p class="landing-cta-sub">Join your fellow Cavaliers and take control of your high school journey.</p>
-                        <a href="#/login" class="landing-btn landing-btn--white landing-btn--lg">Sign Up Now</a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Footer -->
-            <footer class="landing-footer">
-                <div class="landing-container">
-                    <div class="landing-footer-inner">
-                        <div class="landing-footer-brand">
-                            <img src="sift.png" alt="LT Assistant" class="landing-footer-logo">
-                            <span>LT Assistant</span>
-                        </div>
-                        <p class="landing-footer-copy">Built for Lake Travis High School students.</p>
-                    </div>
-                </div>
-            </footer>
         </div>
     </template>
 

@@ -452,16 +452,16 @@ class App {
     }
 
     handleRouting() {
-        const path = window.location.hash.slice(1) || '/';
+        const path = window.location.hash.slice(1) || '/landing';
 
-        // Redirect to landing if not authenticated (allow login and landing)
+        // Redirect to login if not authenticated
         if (!this.isAuthenticated && path !== '/login' && path !== '/landing') {
-            this.navigateTo('/landing');
+            this.navigateTo('/login');
             return;
         }
 
-        // Redirect to home if authenticated and on login/landing page
-        if (this.isAuthenticated && (path === '/login' || path === '/landing')) {
+        // Redirect to home if authenticated and on login page
+        if (this.isAuthenticated && path === '/login') {
             this.navigateTo('/');
             return;
         }
@@ -486,7 +486,7 @@ class App {
                 this.renderPage('planner');
                 break;
             default:
-                this.navigateTo('/');
+                this.navigateTo('/landing');
         }
     }
 
@@ -509,9 +509,9 @@ class App {
 
         this.currentPage = pageName;
 
-        // Show/hide theme toggle (hide on landing page)
+        // Show theme toggle
         const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) themeToggle.style.display = pageName === 'landing' ? 'none' : '';
+        if (themeToggle) themeToggle.style.display = '';
 
         // Setup page-specific functionality
         this.setupPageHandlers(pageName);
@@ -519,9 +519,6 @@ class App {
 
     setupPageHandlers(pageName) {
         switch (pageName) {
-            case 'landing':
-                this.setupLandingHandlers();
-                break;
             case 'login':
                 this.setupLoginHandlers();
                 break;
@@ -537,7 +534,84 @@ class App {
             case 'planner':
                 this.setupPlannerHandlers();
                 break;
+            case 'landing':
+                this.setupLandingHandlers();
+                break;
         }
+    }
+
+    setupLandingHandlers() {
+        // Hide theme toggle on landing page
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) themeToggle.style.display = 'none';
+
+        const landingPage = document.querySelector('.landing-page');
+        if (!landingPage) return;
+
+        // Scroll reveal observer — toggles on enter/leave so animations replay
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const delay = entry.target.dataset.revealDelay || 0;
+                entry.target.style.setProperty('--reveal-delay', delay);
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                } else {
+                    entry.target.classList.remove('is-visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+        landingPage.querySelectorAll('.landing-reveal').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // Navbar appears on scroll (hidden when hero is visible)
+        const nav = landingPage.querySelector('.landing-nav');
+        const hero = landingPage.querySelector('.landing-hero');
+
+        if (nav && hero) {
+            const navObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) {
+                        nav.classList.add('landing-nav--scrolled');
+                    } else {
+                        nav.classList.remove('landing-nav--scrolled');
+                    }
+                });
+            }, { threshold: 0, rootMargin: '-80px 0px 0px 0px' });
+            navObserver.observe(hero);
+        }
+
+        // Icon animation triggers — toggles on enter/leave so animations replay
+        const iconObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('landing-icon-animate');
+                } else {
+                    entry.target.classList.remove('landing-icon-animate');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        landingPage.querySelectorAll('.landing-bento-icon').forEach(el => {
+            iconObserver.observe(el);
+        });
+
+        // Hero parallax on scroll
+        const heroContent = landingPage.querySelector('.landing-hero-content');
+        const scrollIndicator = landingPage.querySelector('.landing-scroll-indicator');
+
+        landingPage.addEventListener('scroll', () => {
+            const scrollY = landingPage.scrollTop;
+            if (scrollY < window.innerHeight && heroContent) {
+                const progress = scrollY / window.innerHeight;
+                heroContent.style.transform = `translateY(${scrollY * 0.3}px)`;
+                heroContent.style.opacity = 1 - progress * 1.2;
+            }
+            if (scrollIndicator) {
+                scrollIndicator.style.opacity = Math.max(0, 1 - (scrollY / 200));
+            }
+        });
     }
 
     setupEventListeners() {
@@ -549,61 +623,6 @@ class App {
                 this.navigateTo(navLink.dataset.nav);
             }
         });
-    }
-
-    setupLandingHandlers() {
-        // Nav background on scroll
-        const nav = document.getElementById('landing-nav');
-        const onScroll = () => {
-            if (nav) nav.classList.toggle('scrolled', window.scrollY > 60);
-        };
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-
-        // Smooth scroll for data-scroll-to buttons
-        document.querySelectorAll('[data-scroll-to]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = document.getElementById(btn.dataset.scrollTo);
-                target?.scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-
-        // Scroll reveal observer
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('revealed');
-            });
-        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-        document.querySelectorAll('[data-landing-reveal]').forEach(el => revealObserver.observe(el));
-
-        // Counter animation for stats
-        const counterObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                const el = entry.target;
-                const target = parseInt(el.dataset.countTo, 10);
-                const duration = 1400;
-                const start = performance.now();
-                const animate = (now) => {
-                    const progress = Math.min((now - start) / duration, 1);
-                    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-                    el.textContent = Math.round(target * eased);
-                    if (progress < 1) requestAnimationFrame(animate);
-                };
-                requestAnimationFrame(animate);
-                counterObserver.unobserve(el);
-            });
-        }, { threshold: 0.5 });
-
-        document.querySelectorAll('[data-count-to]').forEach(el => counterObserver.observe(el));
-
-        // Clean up scroll listener when navigating away
-        const cleanup = () => {
-            window.removeEventListener('scroll', onScroll);
-            window.removeEventListener('hashchange', cleanup);
-        };
-        window.addEventListener('hashchange', cleanup);
     }
 
     setupLoginHandlers() {
