@@ -565,6 +565,29 @@ class App {
             revealObserver.observe(el);
         });
 
+        // Add 3D Tilt and Spotlight Hover to Bento Cards
+        const bentoCards = landingPage.querySelectorAll('.landing-bento-card');
+        bentoCards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+
+                // 3D Parallax Tilt
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -4; // Opposite direction for 3D tilt feeling
+                const rotateY = ((x - centerX) / centerX) * 4;
+
+                card.style.transform = `perspective(1000px) scale(1.02) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = ''; // Reverts cleanly to CSS transition default
+            });
+        });
+
         // Navbar appears on scroll (hidden when hero is visible)
         const nav = landingPage.querySelector('.landing-nav');
         const hero = landingPage.querySelector('.landing-hero');
@@ -612,6 +635,124 @@ class App {
                 scrollIndicator.style.opacity = Math.max(0, 1 - (scrollY / 200));
             }
         });
+
+        // Setup Fluid Particles Background
+        const canvas = landingPage.querySelector('#hero-fluid-canvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            let mouse = { x: null, y: null, radius: 140 };
+
+            const resize = () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                initParticles();
+            };
+            window.addEventListener('resize', resize);
+
+            landingPage.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY + landingPage.scrollTop;
+            });
+            landingPage.addEventListener('mouseleave', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.density = (Math.random() * 20) + 1;
+                    this.vx = (Math.random() - 0.5) * 1;
+                    this.vy = (Math.random() - 0.5) * 1;
+                    const hues = [0, 340, 220, 200, 280]; // Red, Pink, Blue, Light Blue, Purple
+                    this.hue = hues[Math.floor(Math.random() * hues.length)];
+                }
+                draw() {
+                    this.drawX = this.x;
+                    this.drawY = this.y;
+
+                    ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 0.6)`;
+                    ctx.beginPath();
+                    ctx.arc(this.drawX, this.drawY, this.size, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Boundaries
+                    if (this.x < 0) this.x = width;
+                    if (this.x > width) this.x = 0;
+                    if (this.y < 0) this.y = height;
+                    if (this.y > height) this.y = 0;
+
+                    // Mouse interaction
+                    if (mouse.x != null) {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        let maxDistance = mouse.radius;
+                        if (distance < maxDistance && distance > 0) {
+                            let force = (maxDistance - distance) / maxDistance;
+                            this.x -= (dx / distance) * force * this.density;
+                            this.y -= (dy / distance) * force * this.density;
+                        }
+                    }
+                }
+            }
+
+            const initParticles = () => {
+                particles = [];
+                let numberOfParticles = Math.floor((width * height) / 9000);
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particles.push(new Particle());
+                }
+            };
+
+            // Set initial size
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+
+            const animateNetwork = () => {
+                if (!document.body.contains(canvas)) {
+                    window.removeEventListener('resize', resize);
+                    return;
+                }
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i; j < particles.length; j++) {
+                        let dx = particles[i].drawX - particles[j].drawX;
+                        let dy = particles[i].drawY - particles[j].drawY;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 110) {
+                            ctx.beginPath();
+                            let avgHue = (particles[i].hue + particles[j].hue) / 2;
+                            ctx.strokeStyle = `hsla(${avgHue}, 70%, 70%, ${0.15 - distance / 733})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.moveTo(particles[i].drawX, particles[i].drawY);
+                            ctx.lineTo(particles[j].drawX, particles[j].drawY);
+                            ctx.stroke();
+                            ctx.closePath();
+                        }
+                    }
+                }
+                requestAnimationFrame(animateNetwork);
+            };
+            animateNetwork();
+        }
     }
 
     setupEventListeners() {
@@ -1410,7 +1551,7 @@ class App {
 
     async selectItem(itemId) {
         this.selectedItemId = String(itemId); // Ensure consistent string storage
-        
+
         const list = document.getElementById('items-list');
         if (list) {
             list.querySelectorAll('.item-card').forEach(card => {
