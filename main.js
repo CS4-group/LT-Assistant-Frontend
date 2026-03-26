@@ -159,6 +159,7 @@ class App {
                     state.current = 0;
                     state.target = 0;
                     state.velocity = 0;
+                    container.style.transition = '';
                     container.style.transform = '';
                     this.activeRubberBands.delete(container);
                 }
@@ -568,23 +569,63 @@ class App {
         // Add 3D Tilt and Spotlight Hover to Bento Cards
         const bentoCards = landingPage.querySelectorAll('.landing-bento-card');
         bentoCards.forEach(card => {
+            let targetX = 0, targetY = 0;
+            let currX = 0, currY = 0;
+            let isHovered = false;
+            let scale = 1, ty = 0;
+            let animFrame = null;
+
+            const tick = () => {
+                // Smoothly lerp towards targets
+                currX += (targetX - currX) * 0.12;
+                currY += (targetY - currY) * 0.12;
+
+                const targetScale = isHovered ? 1.02 : 1;
+                const targetTy = isHovered ? -8 : 0;
+                scale += (targetScale - scale) * 0.15;
+                ty += (targetTy - ty) * 0.15;
+
+                // Render tight 3D transform without CSS fighting
+                card.style.transform = `perspective(1000px) translateY(${ty}px) scale(${scale}) rotateX(${currY}deg) rotateY(${currX}deg)`;
+
+                // Stop physics tick if returned to rest completely
+                if (!isHovered && Math.abs(currX) < 0.01 && Math.abs(currY) < 0.01 && Math.abs(scale - 1) < 0.001) {
+                    card.style.transform = '';
+                    card.style.transition = ''; // Restore original CSS transitions
+                    animFrame = null;
+                    return;
+                }
+
+                animFrame = requestAnimationFrame(tick);
+            };
+
+            card.addEventListener('mouseenter', () => {
+                isHovered = true;
+                // Remove CSS transform transitions so JS can physics it tightly without lag/stutter
+                card.style.transition = 'box-shadow 0.5s ease, border-color 0.4s ease, background-color 0.4s ease';
+                if (!animFrame) animFrame = requestAnimationFrame(tick);
+            });
+
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
+                
+                // Spotlight coordinate variables
                 card.style.setProperty('--mouse-x', `${x}px`);
                 card.style.setProperty('--mouse-y', `${y}px`);
 
-                // 3D Parallax Tilt
+                // 3D Parallax Tilt targets
                 const centerX = rect.width / 2;
                 const centerY = rect.height / 2;
-                const rotateX = ((y - centerY) / centerY) * -4; // Opposite direction for 3D tilt feeling
-                const rotateY = ((x - centerX) / centerX) * 4;
-
-                card.style.transform = `perspective(1000px) scale(1.02) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                targetY = ((y - centerY) / centerY) * -5; // Increased slightly for juicier feedback
+                targetX = ((x - centerX) / centerX) * 5;
             });
+
             card.addEventListener('mouseleave', () => {
-                card.style.transform = ''; // Reverts cleanly to CSS transition default
+                isHovered = false;
+                targetX = 0;
+                targetY = 0;
             });
         });
 
