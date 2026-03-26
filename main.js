@@ -645,15 +645,16 @@ class App {
             let mouse = { x: null, y: null, radius: 140 };
 
             const resize = () => {
-                width = canvas.width = window.innerWidth;
-                height = canvas.height = window.innerHeight;
+                width = canvas.width = canvas.offsetWidth || window.innerWidth;
+                height = canvas.height = canvas.offsetHeight || (window.innerHeight * 1.25);
                 initParticles();
             };
             window.addEventListener('resize', resize);
 
             landingPage.addEventListener('mousemove', (e) => {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY + landingPage.scrollTop;
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = (e.clientX - rect.left) * (width / rect.width);
+                mouse.y = (e.clientY - rect.top) * (height / rect.height);
             });
             landingPage.addEventListener('mouseleave', () => {
                 mouse.x = null;
@@ -715,8 +716,8 @@ class App {
             };
 
             // Set initial size
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
+            width = canvas.width = canvas.offsetWidth || window.innerWidth;
+            height = canvas.height = canvas.offsetHeight || (window.innerHeight * 1.25);
             initParticles();
 
             const animateNetwork = () => {
