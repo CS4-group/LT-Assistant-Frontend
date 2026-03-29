@@ -541,6 +541,162 @@ class App {
         }
     }
 
+    initFluidCanvas(container, canvasSelector, opts = {}) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const canvas = container.querySelector(canvasSelector);
+        if (!canvas) return;
+
+        const hues = opts.hues || [0, 350, 355, 5, 345];
+        const silverChance = opts.silverChance || 0.3;
+        const speed = opts.speed || 1;
+        const mouseRadius = opts.mouseRadius || 140;
+        const mouseMode = opts.mouseMode || 'repel';
+        const connectionDist = opts.connectionDist || 110;
+        const densityDiv = opts.densityDiv || 9000;
+        const sizeMin = opts.sizeMin || 0.5;
+        const sizeMax = opts.sizeMax || 2.5;
+        const particleAlpha = opts.particleAlpha || 0.6;
+        const lineMaxAlpha = opts.lineMaxAlpha || 0.15;
+        const heightMul = opts.heightMultiplier || 1.25;
+
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let mouse = { x: null, y: null, radius: mouseRadius };
+
+        const resize = () => {
+            width = canvas.width = canvas.offsetWidth || window.innerWidth;
+            height = canvas.height = canvas.offsetHeight || (window.innerHeight * heightMul);
+            initParticles();
+        };
+        window.addEventListener('resize', resize);
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = (e.clientX - rect.left) * (width / rect.width);
+            mouse.y = (e.clientY - rect.top) * (height / rect.height);
+        });
+        container.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * (sizeMax - sizeMin) + sizeMin;
+                this.density = (Math.random() * 20) + 1;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed;
+                if (Math.random() < silverChance) {
+                    this.hue = 0;
+                    this.sat = 5;
+                    this.light = 78 + Math.random() * 10;
+                } else {
+                    this.hue = hues[Math.floor(Math.random() * hues.length)];
+                    this.sat = 70 + Math.random() * 15;
+                    this.light = 60 + Math.random() * 15;
+                }
+            }
+            draw() {
+                this.drawX = this.x;
+                this.drawY = this.y;
+                ctx.fillStyle = `hsla(${this.hue}, ${this.sat}%, ${this.light}%, ${particleAlpha})`;
+                ctx.beginPath();
+                ctx.arc(this.drawX, this.drawY, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    let maxDistance = mouse.radius;
+                    if (distance < maxDistance && distance > 0) {
+                        if (mouseMode === 'attract') {
+                            let t = 1 - distance / maxDistance;
+                            let force = t * t * t * 0.8;
+                            let maxStep = 3.5;
+                            let moveX = (dx / distance) * force * this.density;
+                            let moveY = (dy / distance) * force * this.density;
+                            let mag = Math.sqrt(moveX * moveX + moveY * moveY);
+                            if (mag > maxStep) {
+                                moveX = (moveX / mag) * maxStep;
+                                moveY = (moveY / mag) * maxStep;
+                            }
+                            if (distance > 35) {
+                                this.x += moveX;
+                                this.y += moveY;
+                            }
+                        } else {
+                            let force = (maxDistance - distance) / maxDistance;
+                            this.x -= (dx / distance) * force * this.density;
+                            this.y -= (dy / distance) * force * this.density;
+                        }
+                    }
+                }
+            }
+        }
+
+        const initParticles = () => {
+            particles = [];
+            let numberOfParticles = Math.floor((width * height) / densityDiv);
+            for (let i = 0; i < numberOfParticles; i++) {
+                particles.push(new Particle());
+            }
+        };
+
+        width = canvas.width = canvas.offsetWidth || window.innerWidth;
+        height = canvas.height = canvas.offsetHeight || (window.innerHeight * heightMul);
+        initParticles();
+
+        const animateNetwork = () => {
+            if (!document.body.contains(canvas)) {
+                window.removeEventListener('resize', resize);
+                return;
+            }
+            ctx.clearRect(0, 0, width, height);
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].drawX - particles[j].drawX;
+                    let dy = particles[i].drawY - particles[j].drawY;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDist) {
+                        ctx.beginPath();
+                        let avgHue = (particles[i].hue + particles[j].hue) / 2;
+                        let avgSat = (particles[i].sat + particles[j].sat) / 2;
+                        let avgLight = (particles[i].light + particles[j].light) / 2;
+                        ctx.strokeStyle = `hsla(${avgHue}, ${avgSat}%, ${avgLight}%, ${lineMaxAlpha - distance / (connectionDist * 6.67)})`;
+                        ctx.lineWidth = opts.lineWidth || 0.8;
+                        ctx.moveTo(particles[i].drawX, particles[i].drawY);
+                        ctx.lineTo(particles[j].drawX, particles[j].drawY);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+            requestAnimationFrame(animateNetwork);
+        };
+        animateNetwork();
+    }
+
     setupLandingHandlers() {
         // Hide theme toggle on landing page
         const themeToggle = document.getElementById('theme-toggle');
@@ -678,123 +834,21 @@ class App {
         });
 
         // Setup Fluid Particles Background
-        const canvas = landingPage.querySelector('#hero-fluid-canvas');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            let width, height;
-            let particles = [];
-            let mouse = { x: null, y: null, radius: 140 };
-
-            const resize = () => {
-                width = canvas.width = canvas.offsetWidth || window.innerWidth;
-                height = canvas.height = canvas.offsetHeight || (window.innerHeight * 1.25);
-                initParticles();
-            };
-            window.addEventListener('resize', resize);
-
-            landingPage.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = (e.clientX - rect.left) * (width / rect.width);
-                mouse.y = (e.clientY - rect.top) * (height / rect.height);
-            });
-            landingPage.addEventListener('mouseleave', () => {
-                mouse.x = null;
-                mouse.y = null;
-            });
-
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * width;
-                    this.y = Math.random() * height;
-                    this.size = Math.random() * 2 + 0.5;
-                    this.density = (Math.random() * 20) + 1;
-                    this.vx = (Math.random() - 0.5) * 1;
-                    this.vy = (Math.random() - 0.5) * 1;
-                    const hues = [0, 340, 220, 200, 280]; // Red, Pink, Blue, Light Blue, Purple
-                    this.hue = hues[Math.floor(Math.random() * hues.length)];
-                }
-                draw() {
-                    this.drawX = this.x;
-                    this.drawY = this.y;
-
-                    ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, 0.6)`;
-                    ctx.beginPath();
-                    ctx.arc(this.drawX, this.drawY, this.size, 0, Math.PI * 2);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-
-                    // Boundaries
-                    if (this.x < 0) this.x = width;
-                    if (this.x > width) this.x = 0;
-                    if (this.y < 0) this.y = height;
-                    if (this.y > height) this.y = 0;
-
-                    // Mouse interaction
-                    if (mouse.x != null) {
-                        let dx = mouse.x - this.x;
-                        let dy = mouse.y - this.y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-                        let maxDistance = mouse.radius;
-                        if (distance < maxDistance && distance > 0) {
-                            let force = (maxDistance - distance) / maxDistance;
-                            this.x -= (dx / distance) * force * this.density;
-                            this.y -= (dy / distance) * force * this.density;
-                        }
-                    }
-                }
-            }
-
-            const initParticles = () => {
-                particles = [];
-                let numberOfParticles = Math.floor((width * height) / 9000);
-                for (let i = 0; i < numberOfParticles; i++) {
-                    particles.push(new Particle());
-                }
-            };
-
-            // Set initial size
-            width = canvas.width = canvas.offsetWidth || window.innerWidth;
-            height = canvas.height = canvas.offsetHeight || (window.innerHeight * 1.25);
-            initParticles();
-
-            const animateNetwork = () => {
-                if (!document.body.contains(canvas)) {
-                    window.removeEventListener('resize', resize);
-                    return;
-                }
-                ctx.clearRect(0, 0, width, height);
-
-                for (let i = 0; i < particles.length; i++) {
-                    particles[i].update();
-                    particles[i].draw();
-                }
-
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i; j < particles.length; j++) {
-                        let dx = particles[i].drawX - particles[j].drawX;
-                        let dy = particles[i].drawY - particles[j].drawY;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < 110) {
-                            ctx.beginPath();
-                            let avgHue = (particles[i].hue + particles[j].hue) / 2;
-                            ctx.strokeStyle = `hsla(${avgHue}, 70%, 70%, ${0.15 - distance / 733})`;
-                            ctx.lineWidth = 0.8;
-                            ctx.moveTo(particles[i].drawX, particles[i].drawY);
-                            ctx.lineTo(particles[j].drawX, particles[j].drawY);
-                            ctx.stroke();
-                            ctx.closePath();
-                        }
-                    }
-                }
-                requestAnimationFrame(animateNetwork);
-            };
-            animateNetwork();
-        }
+        this.initFluidCanvas(landingPage, '.fluid-canvas', {
+            heightMultiplier: 1.25,
+            hues: [0, 350, 355, 5, 345],
+            silverChance: 0.3,
+            speed: 1,
+            mouseRadius: 140,
+            mouseMode: 'repel',
+            connectionDist: 130,
+            densityDiv: 7000,
+            sizeMin: 1.5,
+            sizeMax: 4,
+            particleAlpha: 0.75,
+            lineMaxAlpha: 0.3,
+            lineWidth: 2
+        });
     }
 
     setupEventListeners() {
@@ -841,6 +895,7 @@ class App {
         if (bypassBtn) {
             bypassBtn.addEventListener('click', () => this.bypassLogin());
         }
+
     }
 
     bypassLogin() {
@@ -991,6 +1046,24 @@ class App {
         if (userNameEl) userNameEl.textContent = userName;
         if (userEmailEl) userEmailEl.textContent = userEmail;
         if (userAvatarEl) userAvatarEl.src = userPicture;
+
+        // Setup fluid particles background
+        const homePage = document.querySelector('.home-page');
+        if (homePage) this.initFluidCanvas(homePage, '.fluid-canvas', {
+            heightMultiplier: 1.0,
+            hues: [0, 350, 355, 5, 345],
+            silverChance: 0.35,
+            speed: 0.5,
+            mouseRadius: 200,
+            mouseMode: 'attract',
+            connectionDist: 140,
+            densityDiv: 7000,
+            sizeMin: 1.5,
+            sizeMax: 4,
+            particleAlpha: 0.7,
+            lineMaxAlpha: 0.28,
+            lineWidth: 2
+        });
     }
 
     setupRatingHandlers() {
