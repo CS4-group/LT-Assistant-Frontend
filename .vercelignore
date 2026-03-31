@@ -1,0 +1,10 @@
+node_modules
+old-react-code
+.claude
+.vscode
+.env
+.env.*
+.eslintrc.cjs
+README-VANILLA.md
+CLAUDE.md
+package-lock.json
