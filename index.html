@@ -64,7 +64,7 @@
             <!-- Hero Section -->
             <section class="landing-hero">
                 <div class="landing-hero-bg"></div>
-                <canvas class="fluid-canvas hero-fluid-canvas"></canvas>
+                <canvas id="hero-fluid-canvas" class="hero-fluid-canvas"></canvas>
                 <div class="landing-particles">
                     <span class="landing-particle" style="--i:0"></span>
                     <span class="landing-particle" style="--i:1"></span>
@@ -565,35 +565,12 @@
     <!-- Home page-->
     <template id="home-template">
         <div class="page-container home-page">
+            <div class="home-top-right">
+                <button class="btn btn-outline" onclick="navigateTo('/landing')">← Back</button>
+            </div>
             <div class="home-bg">
                 <img src="title-bg.jpg" alt="" class="bg-image">
                 <div class="bg-overlay"></div>
-            </div>
-            <canvas class="fluid-canvas"></canvas>
-            <div class="landing-particles">
-                <span class="landing-particle" style="--i:0"></span>
-                <span class="landing-particle" style="--i:1"></span>
-                <span class="landing-particle" style="--i:2"></span>
-                <span class="landing-particle" style="--i:3"></span>
-                <span class="landing-particle" style="--i:4"></span>
-                <span class="landing-particle" style="--i:5"></span>
-                <span class="landing-particle" style="--i:6"></span>
-                <span class="landing-particle" style="--i:7"></span>
-                <span class="landing-particle" style="--i:8"></span>
-                <span class="landing-particle" style="--i:9"></span>
-                <span class="landing-particle" style="--i:10"></span>
-                <span class="landing-particle" style="--i:11"></span>
-                <span class="landing-particle" style="--i:12"></span>
-                <span class="landing-particle" style="--i:13"></span>
-                <span class="landing-particle" style="--i:14"></span>
-                <span class="landing-particle" style="--i:15"></span>
-                <span class="landing-particle" style="--i:16"></span>
-                <span class="landing-particle" style="--i:17"></span>
-                <span class="landing-particle" style="--i:18"></span>
-                <span class="landing-particle" style="--i:19"></span>
-            </div>
-            <div class="home-top-right">
-                <button class="btn btn-outline" onclick="navigateTo('/landing')">← Back</button>
             </div>
 
             <div class="user-profile-section">
