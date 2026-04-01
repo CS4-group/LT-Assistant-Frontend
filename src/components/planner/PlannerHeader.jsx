@@ -14,17 +14,15 @@ export default function PlannerHeader() {
 
   return (
     <div className="planner-header">
-      <div className="planner-header-top">
-        <button className="btn btn-outline planner-back-btn" onClick={() => navigate('/')}>
-          &larr; Back
-        </button>
-        <div className="planner-header-text">
+      <div className="header-left">
+        <div>
           <h1>Course Planner</h1>
-          <p>Plan your 4-year high school schedule</p>
+          <p>Plan your 4-year high school journey</p>
         </div>
-        <button className="btn btn-outline planner-reset-btn" onClick={handleReset}>
-          Reset
-        </button>
+      </div>
+      <div className="header-right">
+        <button className="btn btn-outline" onClick={() => navigate('/')}>Back</button>
+        <button className="btn btn-outline" onClick={handleReset}>Reset Plan</button>
       </div>
     </div>
   )

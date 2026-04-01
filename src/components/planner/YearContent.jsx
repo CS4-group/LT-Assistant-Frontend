@@ -80,7 +80,7 @@ export default function YearContent() {
 
   return (
     <>
-      <div ref={containerRef} id="planner-year-content">
+      <div ref={containerRef} id="planner-year-content" className="planner-year-content">
         {Array.from({ length: MAX_PERIODS }, (_, i) => (
           <PeriodRow
             key={i}

@@ -34,7 +34,7 @@ export default function YearTabs() {
           data-year={year}
           onClick={() => handleTabClick(year)}
         >
-          {YEAR_GRADE_MAP[year]}th Grade
+          {YEAR_GRADE_MAP[year]}th
         </button>
       ))}
     </div>

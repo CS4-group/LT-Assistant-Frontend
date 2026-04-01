@@ -16,11 +16,14 @@ function PlannerPageInner() {
 
   return (
     <div className="planner-page">
-      <div className="page-bg" style={{ backgroundImage: `url(${titleBg})` }} />
+      <div className="page-bg">
+        <img src={titleBg} alt="" className="bg-image" />
+        <div className="bg-overlay"></div>
+      </div>
       <PlannerHeader />
-      <YearTabs />
       <div className="planner-content">
         <div className="planner-grid">
+          <YearTabs />
           <YearContent />
         </div>
         <ChatbotSection />

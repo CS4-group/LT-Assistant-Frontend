@@ -12,7 +12,7 @@ export function useParticleCanvas(canvasRef, containerRef) {
     const animate = () => { ctx.clearRect(0,0,w,h); particles.forEach(p=>{p.update();p.draw()}); for(let i=0;i<particles.length;i++) for(let j=i;j<particles.length;j++){let dx=particles[i].dx-particles[j].dx,dy=particles[i].dy-particles[j].dy,d=Math.sqrt(dx*dx+dy*dy); if(d<110){ctx.beginPath();ctx.strokeStyle=`hsla(${(particles[i].hue+particles[j].hue)/2},70%,70%,${0.15-d/733})`;ctx.lineWidth=0.8;ctx.moveTo(particles[i].dx,particles[i].dy);ctx.lineTo(particles[j].dx,particles[j].dy);ctx.stroke()}}; animId=requestAnimationFrame(animate) }
     const mm = (e) => { const r=canvas.getBoundingClientRect(); mouse.x=(e.clientX-r.left)*(w/r.width); mouse.y=(e.clientY-r.top)*(h/r.height) }
     const ml = () => { mouse.x=null; mouse.y=null }
-    window.addEventListener('resize',resize); container.addEventListener('mousemove',mm); container.addEventListener('mouseleave',ml); resize(); animate()
-    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize',resize); container.removeEventListener('mousemove',mm); container.removeEventListener('mouseleave',ml) }
+    window.addEventListener('resize',resize); window.addEventListener('mousemove',mm); document.addEventListener('mouseleave',ml); resize(); animate()
+    return () => { cancelAnimationFrame(animId); window.removeEventListener('resize',resize); window.removeEventListener('mousemove',mm); document.removeEventListener('mouseleave',ml) }
   }, [])
 }
