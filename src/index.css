@@ -680,6 +680,21 @@ body * {
     border: 2px solid var(--primary-600);
 }
 
+.user-avatar-initials {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-600);
+    background: var(--primary-600);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
 .user-info {
     display: flex;
     flex-direction: column;

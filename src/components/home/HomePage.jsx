@@ -9,7 +9,7 @@ export default function HomePage() {
 
   const userName = user?.name || 'User'
   const userEmail = user?.email || ''
-  const userPicture = user?.picture || 'https://via.placeholder.com/40'
+  const initials = userName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
 
   return (
     <div className="page-container home-page">
@@ -22,7 +22,7 @@ export default function HomePage() {
       </div>
       <div className="user-profile-section">
         <div className="user-profile">
-          <img src={userPicture} alt="User" className="user-avatar" />
+          <div className="user-avatar-initials">{initials}</div>
           <div className="user-info">
             <span className="user-name">{userName}</span>
             <span className="user-email">{userEmail}</span>
