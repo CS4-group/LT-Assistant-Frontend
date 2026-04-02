@@ -36,7 +36,7 @@ export default function AddCourseModal({ year, defaultTerm = 'Fall', periodIdx =
 
     setIsLoadingDetails(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/api/courses/${value}`)
+      const response = await fetch(`${API_BASE_URL}/api/courses/${value}`, { credentials: 'include' })
       if (!response.ok) throw new Error('Failed to fetch')
       const result = await response.json()
       const details = result.success ? result.data : result

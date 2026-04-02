@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
-import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
 import API_BASE_URL from '../config'
 import { YEAR_ORDER, VALID_TERMS, YEAR_GRADE_MAP, GRADE_YEAR_MAP, MAX_PERIODS } from '../utils/constants'
@@ -32,7 +31,6 @@ function countSlots(arr) {
 }
 
 export function PlannerProvider({ children }) {
-  const { token } = useAuth()
   const { showToast } = useToast()
   const [coursePlanner, setCoursePlanner] = useState(createEmptyPlanner)
   const [activeYear, setActiveYear] = useState('Freshman')
@@ -43,10 +41,8 @@ export function PlannerProvider({ children }) {
   const plannerRequest = useCallback(async (method, endpoint, body = null) => {
     const options = {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     }
     if (body) options.body = JSON.stringify(body)
     const response = await fetch(`${API_BASE_URL}/api/planner${endpoint}`, options)
@@ -55,11 +51,11 @@ export function PlannerProvider({ children }) {
       throw new Error(err.message || `Planner request failed (${response.status})`)
     }
     return response.status === 204 ? null : response.json()
-  }, [token])
+  }, [])
 
   const fetchCourseNames = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/courses/names`)
+      const response = await fetch(`${API_BASE_URL}/api/courses/names`, { credentials: 'include' })
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
       const result = await response.json()
       if (result.success) {

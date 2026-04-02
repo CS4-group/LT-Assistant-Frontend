@@ -21,7 +21,7 @@ export default function PlannerHeader() {
         </div>
       </div>
       <div className="header-right">
-        <button className="btn btn-outline" onClick={() => navigate('/')}>Back</button>
+        <button className="btn btn-outline" onClick={() => navigate('/dashboard')}>Back</button>
         <button className="btn btn-outline" onClick={handleReset}>Reset Plan</button>
       </div>
     </div>

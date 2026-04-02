@@ -41,6 +41,7 @@ export default function ChatbotSection() {
       const response = await fetch(`${API_BASE_URL}/api/chatbot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ message: text, availableCourses: names })
       })
 

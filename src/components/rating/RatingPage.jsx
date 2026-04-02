@@ -102,7 +102,7 @@ export default function RatingPage() {
             <h1>Ratings & Reviews</h1>
           </div>
           <div className="header-right">
-            <button className="btn btn-outline" onClick={() => navigate('/')}>
+            <button className="btn btn-outline" onClick={() => navigate('/dashboard')}>
               Back
             </button>
           </div>

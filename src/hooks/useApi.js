@@ -4,18 +4,23 @@ import API_BASE_URL from '../config'
 
 export function useApi() {
   const cache = useRef({})
-  const { token } = useAuth()
+  const { clearAuth } = useAuth()
 
   const request = useCallback(async (url, options = {}) => {
     const headers = { ...options.headers }
-    if (token) headers['Authorization'] = `Bearer ${token}`
     if (options.body) headers['Content-Type'] = 'application/json'
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
       ...options,
       headers,
+      credentials: 'include',
       body: options.body ? JSON.stringify(options.body) : undefined,
     })
+
+    if (response.status === 401) {
+      clearAuth()
+      throw new Error('Session expired')
+    }
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}))
@@ -25,7 +30,7 @@ export function useApi() {
     if (response.status === 204) return null
     const json = await response.json()
     return json.success !== undefined ? (json.data ?? json) : json
-  }, [token])
+  }, [clearAuth])
 
   const get = useCallback(async (url, { useCache = true } = {}) => {
     if (useCache && cache.current[url]) return cache.current[url]

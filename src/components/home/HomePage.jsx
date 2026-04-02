@@ -14,7 +14,7 @@ export default function HomePage() {
   return (
     <div className="page-container home-page">
       <div className="home-top-right">
-        <button className="btn btn-outline" onClick={() => navigate('/landing')}>← Back</button>
+        <button className="btn btn-outline" onClick={() => navigate('/')}>← Back</button>
       </div>
       <div className="home-bg">
         <img src={titleBg} alt="" className="bg-image" />
