@@ -26,10 +26,10 @@ export default function ItemDetails({
       let itemData
       switch (currentTab) {
         case 'courses':
-          itemData = await get(`/api/courses/${selectedItemId}`, { useCache: false })
+          itemData = await get(`/api/courses/${selectedItemId}`)
           break
         case 'clubs': {
-          const raw = await get(`/api/clubs/${selectedItemId}`, { useCache: false })
+          const raw = await get(`/api/clubs/${selectedItemId}`)
           itemData = {
             id: raw.id,
             title: raw.name || raw.title,
@@ -39,7 +39,7 @@ export default function ItemDetails({
           break
         }
         case 'teachers': {
-          const raw = await get(`/api/teachers/${selectedItemId}`, { useCache: false })
+          const raw = await get(`/api/teachers/${selectedItemId}`)
           itemData = {
             id: raw.id,
             title: raw.name || raw.title,
@@ -54,8 +54,7 @@ export default function ItemDetails({
       setDetails(itemData)
 
       const reviewsData = await get(
-        `/api/reviews?entityType=${entityType}&entityId=${selectedItemId}`,
-        { useCache: false }
+        `/api/reviews?entityType=${entityType}&entityId=${selectedItemId}`
       )
       setReviews(Array.isArray(reviewsData) ? reviewsData : [])
     } catch (err) {

@@ -21,7 +21,7 @@ html.theme-transitioning * {
 }
 
 body * {
-    transition-property: background-color, border-color, color, opacity;
+    transition-property: background-color, border-color, color;
     transition-duration: 0.2s;
     transition-timing-function: var(--ease-smooth);
 }
@@ -1274,7 +1274,7 @@ body * {
 .floating-add-review-btn {
     position: fixed;
     bottom: 3rem;
-    left: 50%;
+    left: calc(33.333% + (100% - 33.333%) / 2);
     z-index: 1000;
     padding: 1.2rem 3.5rem;
     font-size: 1.3rem;
@@ -2496,6 +2496,10 @@ body * {
 
     .rating-top-row .header-left h1 {
         font-size: 1.2rem;
+    }
+
+    .floating-add-review-btn {
+        left: 50%;
     }
 
     .chatbot-section {
