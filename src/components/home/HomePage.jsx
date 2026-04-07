@@ -1,11 +1,22 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useApi } from '../../hooks/useApi'
+import { prefetchFirstItem } from '../../utils/ratingPrefetch'
 import titleBg from '../../assets/title-bg.jpg'
 import logo from '../../assets/sift.png'
 
 export default function HomePage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { get } = useApi()
+
+  // Prefetch rating data + first item details so the rating page loads instantly
+  useEffect(() => {
+    get('/api/courses/names').then(data => prefetchFirstItem('courses', data, get)).catch(() => {})
+    get('/api/clubs').then(data => prefetchFirstItem('clubs', data, get)).catch(() => {})
+    get('/api/teachers').then(data => prefetchFirstItem('teachers', data, get)).catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const userName = user?.name || 'User'
   const userEmail = user?.email || ''

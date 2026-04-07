@@ -1,8 +1,19 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useApi } from '../../hooks/useApi'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useApi, getApiCacheSync } from '../../hooks/useApi'
+import { buildDetailsUrl, buildReviewsUrl } from '../../utils/ratingPrefetch'
 import RatingDisplay from './RatingDisplay'
 import ReviewFilterSelect from './ReviewFilterSelect'
 import ReviewCard from './ReviewCard'
+
+function transformDetail(tab, raw) {
+  if (tab === 'clubs') {
+    return { id: raw.id, title: raw.name || raw.title, description: raw.description, meetingDay: raw.meetingDay }
+  }
+  if (tab === 'teachers') {
+    return { id: raw.id, title: raw.name || raw.title, description: raw.department, courses: raw.courses }
+  }
+  return raw
+}
 
 export default function ItemDetails({
   currentTab,
@@ -13,58 +24,67 @@ export default function ItemDetails({
   const { get } = useApi()
   const [details, setDetails] = useState(null)
   const [reviews, setReviews] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const [isLoadingReviews, setIsLoadingReviews] = useState(false)
 
-  const entityType = currentTab === 'courses' ? 'course'
-    : currentTab === 'clubs' ? 'club'
-    : 'teacher'
+  // Track the active item to discard stale responses from previous selections
+  const activeItemRef = useRef(selectedItemId)
 
   const fetchDetails = useCallback(async () => {
     if (!selectedItemId) return
-    setIsLoading(true)
-    try {
-      let itemData
-      switch (currentTab) {
-        case 'courses':
-          itemData = await get(`/api/courses/${selectedItemId}`)
-          break
-        case 'clubs': {
-          const raw = await get(`/api/clubs/${selectedItemId}`)
-          itemData = {
-            id: raw.id,
-            title: raw.name || raw.title,
-            description: raw.description,
-            meetingDay: raw.meetingDay,
-          }
-          break
-        }
-        case 'teachers': {
-          const raw = await get(`/api/teachers/${selectedItemId}`)
-          itemData = {
-            id: raw.id,
-            title: raw.name || raw.title,
-            description: raw.department,
-            courses: raw.courses,
-          }
-          break
-        }
-        default:
-          break
-      }
-      setDetails(itemData)
 
-      const reviewsData = await get(
-        `/api/reviews?entityType=${entityType}&entityId=${selectedItemId}`
-      )
-      setReviews(Array.isArray(reviewsData) ? reviewsData : [])
-    } catch (err) {
-      console.error('Failed to fetch details:', err)
-      setDetails(null)
-      setReviews([])
-    } finally {
-      setIsLoading(false)
+    activeItemRef.current = selectedItemId
+    const itemId = selectedItemId
+
+    const detailsUrl = buildDetailsUrl(currentTab, itemId)
+    const reviewsUrl = buildReviewsUrl(currentTab, itemId)
+
+    // Check synchronous cache before setting loading states
+    const cachedDetails = getApiCacheSync(detailsUrl)
+    const cachedReviews = getApiCacheSync(reviewsUrl)
+
+    if (cachedDetails) {
+      setDetails(transformDetail(currentTab, cachedDetails))
+      setIsLoadingDetails(false)
+    } else {
+      setIsLoadingDetails(true)
     }
-  }, [selectedItemId, currentTab, entityType, get])
+
+    if (cachedReviews) {
+      setReviews(Array.isArray(cachedReviews) ? cachedReviews : [])
+      setIsLoadingReviews(false)
+    } else {
+      setIsLoadingReviews(true)
+    }
+
+    // Background refresh if cached, initial fetch if not
+    // useCache: false when cached (force network refresh), true when not (enables dedup with prefetch)
+    get(detailsUrl, { useCache: !cachedDetails }).then(raw => {
+      if (activeItemRef.current !== itemId) return
+      setDetails(transformDetail(currentTab, raw))
+      setIsLoadingDetails(false)
+    }).catch(err => {
+      if (activeItemRef.current !== itemId) return
+      console.error('Failed to fetch details:', err)
+      if (!cachedDetails) {
+        setDetails(null)
+        setIsLoadingDetails(false)
+      }
+    })
+
+    get(reviewsUrl, { useCache: !cachedReviews }).then(data => {
+      if (activeItemRef.current !== itemId) return
+      setReviews(Array.isArray(data) ? data : [])
+      setIsLoadingReviews(false)
+    }).catch(err => {
+      if (activeItemRef.current !== itemId) return
+      console.error('Failed to fetch reviews:', err)
+      if (!cachedReviews) {
+        setReviews([])
+        setIsLoadingReviews(false)
+      }
+    })
+  }, [selectedItemId, currentTab, get])
 
   useEffect(() => {
     fetchDetails()
@@ -78,7 +98,7 @@ export default function ItemDetails({
     )
   }
 
-  if (isLoading) {
+  if (isLoadingDetails) {
     return (
       <div className="item-details">
         <p>Loading...</p>
@@ -135,7 +155,9 @@ export default function ItemDetails({
           <ReviewFilterSelect value={reviewFilterRating} onChange={onFilterChange} />
         </div>
 
-        {filteredReviews.length === 0 ? (
+        {isLoadingReviews ? (
+          <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem 0' }}>Loading reviews...</p>
+        ) : filteredReviews.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem 0' }}>
             {reviews.length === 0 ? 'No reviews yet. Be the first!' : 'No reviews match this filter.'}
           </p>

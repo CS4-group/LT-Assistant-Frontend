@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react'
+import { useApi } from '../../hooks/useApi'
+import { buildDetailsUrl, buildReviewsUrl } from '../../utils/ratingPrefetch'
 import ItemCard from './ItemCard'
 
 const INITIAL_BATCH = 50
@@ -13,6 +15,7 @@ export default function Sidebar({
   selectedItemId,
   onSelectItem,
 }) {
+  const { get } = useApi()
   const [renderCount, setRenderCount] = useState(INITIAL_BATCH)
   const listRef = useRef(null)
 
@@ -33,6 +36,11 @@ export default function Sidebar({
       onSelectItem(filteredItems[0].id)
     }
   }, [filteredItems, selectedItemId, onSelectItem])
+
+  const handleHover = useCallback((itemId) => {
+    get(buildDetailsUrl(currentTab, itemId)).catch(() => {})
+    get(buildReviewsUrl(currentTab, itemId)).catch(() => {})
+  }, [currentTab, get])
 
   const handleScroll = useCallback(() => {
     const el = listRef.current
@@ -62,6 +70,7 @@ export default function Sidebar({
               item={item}
               isSelected={item.id === selectedItemId}
               onClick={() => onSelectItem(item.id)}
+              onMouseEnter={() => handleHover(item.id)}
               currentTab={currentTab}
               style={index < ANIMATE_COUNT
                 ? { animationDelay: `${index * 0.04}s` }

@@ -1,4 +1,4 @@
-export default function ItemCard({ item, isSelected, onClick, currentTab, style }) {
+export default function ItemCard({ item, isSelected, onClick, currentTab, style, onMouseEnter }) {
   let description
   switch (currentTab) {
     case 'courses':
@@ -18,6 +18,7 @@ export default function ItemCard({ item, isSelected, onClick, currentTab, style 
     <div
       className={`item-card${isSelected ? ' selected' : ''}`}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
       style={style}
     >
       <div className="selection-bg" />
