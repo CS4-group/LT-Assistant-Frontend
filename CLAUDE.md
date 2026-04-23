@@ -4,60 +4,86 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LT Assistant Frontend — a course planning and rating system for high school students. Pure vanilla HTML/CSS/JavaScript SPA with zero dependencies (converted from React/TypeScript).
+LT Assistant Frontend — a course planning and rating system for high school students. Built with React 19, Vite, Tailwind CSS 4, and React Router 7 (HashRouter).
 
 ## Development Commands
 
 ```bash
-# Start dev server (requires Python 3)
-python -m http.server 8000
+# Install dependencies
+npm install
 
-# Alternative with Node.js
-npx http-server . -p 8000
+# Start dev server (localhost:8000)
+npm run dev
+
+# Production build (outputs to dist/)
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-No build step, no bundling, no linting configured. Just serve static files and refresh the browser.
-
-The app expects a backend API at `http://localhost:3000` (configured in `main.js` line 6). It degrades gracefully without one.
+The Vite dev server proxies `/api` requests to `http://localhost:3000`. In production, the API base URL is configured in `src/config.js` (defaults to `https://api.ltassistant.com`). Set the `VITE_API_BASE_URL` env var to override.
 
 ## Architecture
 
-**Three-file SPA:** `index.html` (templates) + `styles.css` (all styles) + `main.js` (all logic).
+**React SPA** with hash-based routing (`/#/login`, `/#/dashboard`, `/#/rating`, `/#/planner`, `/#/onboarding`).
+
+### Project Structure
+
+```
+src/
+├── App.jsx              # Root component, route definitions
+├── main.jsx             # Entry point, renders App into #root
+├── config.js            # API base URL config
+├── index.css            # Global styles (imports Tailwind)
+├── components/
+│   ├── home/            # Dashboard page
+│   ├── landing/         # Landing/marketing page
+│   ├── login/           # Login, Signup, Confirm pages
+│   ├── onboarding/      # Onboarding flow
+│   ├── planner/         # Course planner with drag-and-drop
+│   ├── rating/          # Course/club/teacher ratings
+│   └── ui/              # Shared UI (Modal, StarRating, ThemeToggle, etc.)
+├── contexts/
+│   ├── AuthContext.jsx   # Auth state + Google Sign-In
+│   ├── PlannerContext.jsx
+│   ├── ThemeContext.jsx  # Dark/light mode
+│   └── ToastContext.jsx  # Toast notifications
+├── hooks/               # Custom hooks (drag-and-drop, animations, parallax)
+├── utils/               # API helpers, constants, bad word filter
+└── assets/
+```
 
 ### Routing
 
-Hash-based SPA routing (`/#/login`, `/#/`, `/#/rating`, `/#/planner`, `/#/onboarding`). The `handleRouting()` method in the `App` class maps hashes to page templates.
-
-### Page Rendering Pattern
-
-HTML `<template>` elements in `index.html` are cloned into `<div id="app">`. After cloning, `setupPageHandlers(pageName)` dispatches to page-specific setup methods (e.g., `setupRatingHandlers()`, `setupPlannerHandlers()`).
+HashRouter with protected routes. Auth-required pages wrap in `<ProtectedRoute>`. Routes: `/`, `/login`, `/signup`, `/confirm/:token`, `/dashboard`, `/onboarding`, `/rating`, `/planner`.
 
 ### State Management
 
-Single `App` class instance at `window.app`. State lives as instance properties with localStorage persistence for auth, theme, course planner data, and onboarding status. API responses are cached in instance properties (`courseDetails`, `clubDetails`, `teacherDetails`).
-
-### API Layer
-
-All API calls use `fetch()` with try-catch, hitting endpoints under `this.apiBaseUrl` (e.g., `/api/courses/names`, `/api/reviews`, `/api/planner`). The `plannerRequest()` method is a generic HTTP wrapper for planner endpoints.
+React Context for global state (auth, theme, planner, toasts). No external state library.
 
 ### Adding a New Page
 
-1. Add a `<template>` in `index.html`
-2. Add a route case in `handleRouting()`
-3. Add a setup function in `setupPageHandlers()`
-4. Add styles in `styles.css`
+1. Create component in `src/components/<page-name>/`
+2. Add route in `src/App.jsx`
+3. Wrap in `<ProtectedRoute>` if auth is required
 
 ## Styling
 
-- CSS custom properties in `:root` for theming (primary color: `#c42525`)
-- Dark mode via `[data-theme="dark"]` on `<html>`
-- Glassmorphic design using `backdrop-filter: blur()`
-- Responsive breakpoints at 768px and 1024px
-- Animations use native CSS keyframes (slide, fade, bounce, spin)
+- Tailwind CSS 4 via `@tailwindcss/vite` plugin
+- Custom theme in `tailwind.config.js`: primary color `#c42525`, Figtree/Syne fonts, glassmorphic shadows
+- Dark mode via `[data-theme="dark"]` selector strategy
+- Responsive design with Tailwind breakpoints
 
 ## Key Features by Page
 
-- **Rating** (`/#/rating`): Tabbed browsing of courses/clubs/teachers, review system with star ratings, search and filter
-- **Planner** (`/#/planner`): 4-year course schedule with drag-and-drop, year tabs with slide animations, integrated chatbot
-- **Onboarding** (`/#/onboarding`): 5-step profile setup form
-- **Auth**: Google Sign-In + bypass/demo login option
+- **Landing** (`/`): Marketing/intro page
+- **Rating** (`/rating`): Tabbed browsing of courses/clubs/teachers, review system with star ratings, search and filter
+- **Planner** (`/planner`): 4-year course schedule with drag-and-drop, integrated chatbot
+- **Onboarding** (`/onboarding`): Profile setup flow
+- **Auth**: Google Sign-In + email signup with confirmation flow
+
+## Deployment
+
+- **Vercel**: Configured via `vercel.json` (build command: `npm run build`, output: `dist/`)
+- **AWS S3**: Run `npm run build`, upload `dist/` contents to S3 bucket with static website hosting
