@@ -2268,6 +2268,35 @@ body * {
     border-bottom-left-radius: 0.25rem;
 }
 
+.bot-message .message-content p { margin: 0 0 0.6rem; }
+.bot-message .message-content p:last-child { margin-bottom: 0; }
+.bot-message .message-content ul,
+.bot-message .message-content ol {
+    margin: 0.5rem 0 0.75rem;
+    padding-left: 1.25rem;
+}
+.bot-message .message-content li { margin: 0.25rem 0; }
+
+.suggested-track {
+    margin: 0.75rem 0;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, rgba(196, 37, 37, 0.06), rgba(196, 37, 37, 0.02));
+    border: 1px solid rgba(196, 37, 37, 0.2);
+    border-left: 3px solid var(--primary-color);
+    border-radius: 0.75rem;
+}
+.suggested-track h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+.suggested-track ol {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+.suggested-track li { margin: 0.3rem 0; }
+
 .chatbot-input-area {
     padding: 1rem 1.25rem;
     background: var(--header-bg);

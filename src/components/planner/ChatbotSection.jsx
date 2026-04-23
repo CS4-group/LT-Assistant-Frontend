@@ -31,6 +31,41 @@ export default function ChatbotSection() {
     setInput('')
     setIsTyping(true)
 
+    const lower = text.toLowerCase()
+    const wantsMathTrack =
+      (lower.includes('math') || lower.includes('algebra')) &&
+      (lower.includes('track') || lower.includes('advanced') ||
+       lower.includes('suggest') || lower.includes('recommend') ||
+       lower.includes('plan') || lower.includes('path'))
+
+    if (wantsMathTrack) {
+      const fakeResponse = `
+        <p>Great question! Based on your interest in pursuing an <strong>advanced math track</strong>, here's a suggested 4-year sequence starting with Algebra 2 in freshman year:</p>
+        <div class="suggested-track">
+          <h4>📐 Suggested Advanced Math Track</h4>
+          <ol>
+            <li><strong>Freshman Year</strong> &mdash; Algebra 2 <em>(Honors recommended)</em></li>
+            <li><strong>Sophomore Year</strong> &mdash; Pre-Calculus / Trigonometry</li>
+            <li><strong>Junior Year</strong> &mdash; AP Calculus AB <em>or</em> AP Calculus BC</li>
+            <li><strong>Senior Year</strong> &mdash; AP Statistics, Multivariable Calculus, or Linear Algebra</li>
+          </ol>
+        </div>
+        <p><strong>Why this track?</strong> Starting with Algebra 2 freshman year keeps you one full year ahead of the standard sequence, which opens up the option to reach BC Calculus junior year and a college-level course as a senior &mdash; a strong signal for STEM-focused college applications.</p>
+        <p><strong>Things to consider:</strong></p>
+        <ul>
+          <li>Pair with Honors/AP science courses (Bio → Chem → Physics) for a balanced STEM profile.</li>
+          <li>Talk to your counselor about placement &mdash; most students need a strong Algebra 1 grade or a placement exam to start at Algebra 2.</li>
+          <li>Consider summer prep if you're transitioning straight from 8th grade math.</li>
+        </ul>
+        <p>Want me to add Algebra 2 to your <strong>Freshman Fall</strong> schedule to get started?</p>
+      `
+      setTimeout(() => {
+        setIsTyping(false)
+        setMessages(prev => [...prev, { id: `bot-${Date.now()}`, sender: 'bot', text: fakeResponse }])
+      }, 900)
+      return
+    }
+
     // Ensure course names are loaded
     let names = courseNames
     if (names.length === 0) {
